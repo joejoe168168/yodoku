@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Yodoku — one dino per row, column and colour</title>
+<meta name="description" content="Yodoku: a cute logic puzzle. Place one dino in every row, column and colour region — no touching, even diagonally.">
+<meta name="theme-color" content="#FFF6E5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Yodoku">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#FFF6E5; --bg2:#FFEFD2; --card:#FFFFFF; --ink:#2B3A2E; --ink-soft:#6B7A6E; --line:#2B3A2E;
+  --green:#6FCB73; --green-dark:#2F6B3A; --orange:#FF9F6E; --pink:#FF9BB1; --blue:#8FD3FF; --yellow:#FFD24D;
+  --shadow:0 8px 24px rgba(72,52,20,.10), 0 1px 3px rgba(72,52,20,.08);
+  --r:22px; --tap:48px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px); --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
+  --c0:#FFB4C8; --c1:#FFC98B; --c2:#FFF0A0; --c3:#B9EBAF; --c4:#A9D8FF; --c5:#D4BFFF; --c6:#A6ECE0; --c7:#E4E1DA; --c8:#F8A89A;
+  color-scheme: light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  font-family:"Fredoka",-apple-system,"SF Pro Rounded","Segoe UI",system-ui,sans-serif;
+  color:var(--ink); background:var(--bg);
+  background-image:radial-gradient(circle at 12% 8%, rgba(255,210,77,.22) 0 140px, transparent 141px), radial-gradient(circle at 88% 92%, rgba(111,203,115,.18) 0 160px, transparent 161px);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  overscroll-behavior:none; touch-action:manipulation;
+  display:flex;flex-direction:column;
+  min-height:100dvh;
+  padding: calc(var(--sat) + 6px) calc(var(--sar) + 12px) calc(var(--sab) + 10px) calc(var(--sal) + 12px);
+}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+svg{display:block}
+.hidden{display:none!important}
+
+/* ===== header ===== */
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 8px}
+.logo{display:flex;align-items:center;gap:8px}
+.logo .mark{width:40px;height:40px;filter:drop-shadow(0 2px 0 rgba(47,107,58,.25))}
+.logo h1{margin:0;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1;color:var(--green-dark)}
+.logo h1 span{color:var(--orange)}
+.iconbtn{width:var(--tap);height:var(--tap);border-radius:16px;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;color:var(--green-dark);transition:transform .12s}
+.iconbtn:active{transform:scale(.92)}
+.hdr-right{display:flex;gap:8px}
+
+/* ===== mode tabs ===== */
+.tabs{display:flex;gap:4px;background:rgba(47,107,58,.08);padding:4px;border-radius:18px;margin:0 0 10px}
+.tab{flex:1;min-height:40px;border-radius:14px;font-weight:600;font-size:14px;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;gap:4px;transition:background .15s,color .15s,transform .1s;position:relative}
+.tab[aria-selected="true"]{background:var(--card);color:var(--green-dark);box-shadow:0 2px 8px rgba(72,52,20,.12)}
+.tab:active{transform:scale(.96)}
+.tab .dot{position:absolute;top:6px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--orange);display:none}
+.tab.has-progress .dot{display:block}
+
+/* ===== status row ===== */
+.status{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px;font-size:15px;color:var(--ink-soft);font-weight:500;min-height:26px}
+.status b{color:var(--ink);font-weight:600}
+.timer{font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.pill{background:var(--card);border-radius:999px;padding:3px 10px;box-shadow:0 1px 3px rgba(72,52,20,.08)}
+
+/* ===== board ===== */
+.board-wrap{flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:0}
+.board{
+  --n:7;
+  position:relative;
+  width:min(100%, calc(100dvh - 292px - var(--sat) - var(--sab)), 560px);
+  aspect-ratio:1/1;
+  border:3px solid var(--line);border-radius:14px;overflow:hidden;
+  background:var(--card);box-shadow:var(--shadow);
+  touch-action:none;
+  display:grid;grid-template-columns:repeat(var(--n),1fr);grid-template-rows:repeat(var(--n),1fr);
+}
+.board.won{border-color:var(--green-dark)}
+.cell{position:relative;display:grid;place-items:center;overflow:visible}
+.cell .glyph{width:70%;height:70%;pointer-events:none;transition:transform .12s}
+.cell .x{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.cell .x svg{width:36%;height:36%;opacity:.55}
+.cell .dino{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.cell .dino svg{width:82%;height:82%;filter:drop-shadow(0 1.5px 0 rgba(47,107,58,.35))}
+.cell .dino.pop svg{animation:pop .28s cubic-bezier(.2,1.6,.4,1)}
+.cell .x.pop svg{animation:popx .16s ease-out}
+.cell.err{animation:shake .3s}
+.cell.err::after{content:"";position:absolute;inset:0;background:rgba(232,74,74,.28);animation:errpulse 1.2s infinite}
+.cell.hint::after{content:"";position:absolute;inset:0;background:rgba(255,210,77,.45);animation:hintpulse 1s ease-in-out 3}
+.cell.hint-focus::after{background:rgba(255,159,110,.6)}
+.cell.press{filter:brightness(.96)}
+.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.lines .thin{stroke:rgba(43,58,46,.14);stroke-width:1;vector-effect:non-scaling-stroke}
+.lines .thick{stroke:var(--line);stroke-width:3;vector-effect:non-scaling-stroke;stroke-linecap:round}
+@keyframes pop{0%{transform:scale(.3) rotate(-10deg)}60%{transform:scale(1.12) rotate(3deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes popx{0%{transform:scale(.4)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes errpulse{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes hintpulse{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* ===== controls ===== */
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 0 2px}
+.ctl{min-height:64px;border-radius:20px;background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;font-weight:600;color:var(--green-dark);transition:transform .12s,opacity .15s}
+.ctl svg{width:26px;height:26px}
+.ctl:active{transform:scale(.94)}
+.ctl[disabled]{opacity:.45}
+.ctl.primary{background:var(--green);color:#fff}
+.ctl .badge{position:absolute}
+.toast{position:fixed;left:50%;top:calc(var(--sat) + 150px);transform:translateX(-50%) translateY(-12px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:14px;font-size:15px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:min(92vw,420px);text-align:center;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== modals ===== */
+.scrim{position:fixed;inset:0;background:rgba(43,58,46,.45);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-width:520px;background:var(--card);border-radius:28px 28px 0 0;padding:18px 20px calc(var(--sab) + 20px);box-shadow:0 -10px 40px rgba(0,0,0,.2);transform:translateY(40px);transition:transform .25s cubic-bezier(.2,.9,.3,1.1);max-height:calc(100dvh - 40px);overflow:auto;-webkit-overflow-scrolling:touch}
+.scrim.open .sheet{transform:translateY(0)}
+.sheet .grab{width:44px;height:5px;border-radius:3px;background:rgba(43,58,46,.18);margin:0 auto 12px}
+.sheet h2{margin:4px 0 8px;font-size:24px;color:var(--green-dark);text-align:center}
+.sheet p{margin:6px 0;font-size:16px;line-height:1.4;color:var(--ink-soft)}
+.rule{display:flex;gap:12px;align-items:center;margin:12px 0}
+.rule .ico{width:56px;height:56px;flex:0 0 56px;border-radius:16px;display:grid;place-items:center}
+.rule b{display:block;color:var(--ink);font-size:16px}
+.rule span{font-size:14px;color:var(--ink-soft)}
+.big{width:100%;min-height:54px;border-radius:18px;background:var(--green);color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 0 #4FA757;margin-top:12px;transition:transform .1s}
+.big:active{transform:translateY(2px)}
+.big.ghost{background:var(--bg2);color:var(--green-dark);box-shadow:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.setting{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(43,58,46,.08);gap:12px}
+.setting:last-of-type{border-bottom:0}
+.setting b{font-size:16px;display:block}
+.setting small{color:var(--ink-soft);font-size:13px}
+.switch{width:54px;height:32px;border-radius:16px;background:#D9D6CE;position:relative;transition:background .2s;flex:0 0 54px}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--green)}
+.switch[aria-checked="true"]::after{transform:translateX(22px)}
+.win-hero{display:flex;flex-direction:column;align-items:center;margin-top:-6px}
+.win-hero svg{width:140px;height:140px;animation:bounce 1.2s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 4px}
+.stat{background:var(--bg);border-radius:16px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:22px;color:var(--green-dark);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--ink-soft);font-weight:500}
+.streak-flame{color:var(--orange)}
+canvas.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.statgrid .stat{text-align:left;padding:12px 14px}
+.statgrid .stat b{font-size:20px}
+.emoji-grid{font-size:14px;line-height:1.15;text-align:center;letter-spacing:1px;margin:8px 0;white-space:pre;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+@media (max-height:640px){ .logo h1{font-size:24px} .ctl{min-height:56px} .controls{padding-top:8px} }
+@media (min-width:600px){ body{align-items:center} header,.tabs,.status,.board-wrap,.controls{width:100%;max-width:560px} }
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important} }
+
+/* A little garden, with the puzzle always in reach. */
+body{height:auto;min-height:100dvh;max-width:1100px;margin:auto;padding-top:calc(var(--sat) + 20px);background-color:#FAF8EF;background-image:radial-gradient(ellipse at 0% 0%,#DEECD5 0,transparent 45%),radial-gradient(ellipse at 100% 100%,#FCE3CD 0,transparent 45%)}
+header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-width:560px;margin-left:auto;margin-right:auto}
+.logo .mark{width:56px;height:56px}.logo h1{font-size:34px;letter-spacing:-1px}.logo h1 span{color:#DA805B}
+.intro{display:flex;align-items:center;justify-content:space-between;padding:12px 2px 18px;gap:16px}.intro h2{font-size:26px;letter-spacing:-.6px;margin:0 0 5px;color:#285841}.intro p{margin:0;font-size:14px;color:#687B68;line-height:1.5}.intro svg{width:74px;height:74px;flex-shrink:0;transform:rotate(8deg)}
+.tabs{background:#E8ECDD}.tab{min-height:44px}.tab[aria-selected="true"]{color:#285841}
+.status{padding-top:5px;padding-bottom:12px}.board-wrap{flex:0 0 auto}.board{width:100%;max-width:min(560px,calc(100dvh - 370px));min-width:280px;border:3px solid #38583F;border-radius:18px;box-shadow:0 7px 0 #D9DFC9,0 15px 35px #38583F12}
+.lines .thick{stroke:#38583F;stroke-width:2.5}.cell:focus-visible{outline:3px solid #285841;outline-offset:-4px;z-index:2}.cell .dino svg{width:94%;height:94%;filter:drop-shadow(0 2px 0 #FFFFFF90)}.cell .x svg{width:26%;height:26%;opacity:.45}.cell.auto .x svg{opacity:.22}.cell.err::after{pointer-events:none}.cell.hint::after{pointer-events:none}
+.playbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:18px}.tools{display:flex;gap:3px;padding:4px;background:#E8ECDD;border-radius:17px}.tool{min-width:64px;min-height:44px;padding:0 10px;border-radius:13px;font-size:14px;font-weight:500}.tool[aria-pressed="true"]{background:#285841;color:white;box-shadow:0 2px 4px #28584120}.auto-toggle{font-size:13px;min-height:48px;padding:0 12px;border:1px solid #CAD7C1;border-radius:16px;background:#FFFFFF80;color:#285841}.auto-toggle[aria-pressed="true"]{background:#DDEDD3}
+.tip{font-size:12px;text-align:center;color:#687B68;line-height:1.5;margin-top:9px;margin-bottom:0;min-height:18px}.controls{padding-top:14px;padding-bottom:16px}.ctl{min-height:62px;border:1px solid #E5E8DD;box-shadow:0 3px 0 #E5E8DD;border-radius:18px}.ctl.primary,.big{background:#285841;color:white}.pill{color:#285841}.scrim:not(.open){visibility:hidden}.sheet{border:1px solid #E5E8DD}
+@media(min-width:850px) and (min-height:650px){body{display:grid;grid-template-columns:280px minmax(0,560px);column-gap:60px;align-content:center;justify-content:center;padding:36px}header{grid-column:1;grid-row:1}.intro{grid-column:1;grid-row:2 / span 2;display:block;align-self:center}.intro h2{font-size:38px;line-height:1.08}.intro p{font-size:16px;margin-top:14px}.intro svg{width:150px;height:150px;margin:24px auto 0;transform:rotate(-6deg)}.tabs{grid-column:2;grid-row:1}.status{grid-column:2;grid-row:2}.board-wrap{grid-column:2;grid-row:3}.board{max-width:min(560px,calc(100dvh - 265px))}.playbar{grid-column:2;grid-row:4}.tip{grid-column:2;grid-row:5}.controls{grid-column:1;grid-row:4 / span 2;grid-template-columns:repeat(2,1fr);align-self:end}.sheet{border-radius:28px}.scrim{align-items:center}}
+@media(max-width:380px){body{padding-left:10px;padding-right:10px}.intro{padding:6px 2px 10px}.intro h2{font-size:22px}.intro svg{width:50px;height:50px}.tool{min-width:54px;padding:0 8px}.auto-toggle{padding:0 8px}.logo h1{font-size:29px}.board{min-width:0}}
+@media(max-height:740px) and (max-width:849px){body{padding-top:calc(var(--sat) + 6px)}.intro{padding:3px 2px 10px}.intro svg{display:none}.intro h2{font-size:20px}.board{max-width:min(480px,calc(100dvh - 325px));min-width:min(100%,310px)}.logo .mark{width:42px;height:42px}.playbar{margin-top:12px}.controls{padding-top:10px}}
+@media(max-height:500px) and (orientation:landscape){.intro{display:none}.board{min-width:300px}body{overflow:auto}.board-wrap{margin-top:8px}}
+@media(max-width:599px){.intro{padding:6px 2px 12px}.intro h2{font-size:22px;line-height:1.12}.intro p{font-size:12px;line-height:1.4}.intro svg{width:62px;height:62px}.board{max-width:min(100%,calc(100dvh - 440px));min-width:min(100%,300px)}.controls{padding-bottom:6px}.tip{margin-top:6px}.playbar{margin-top:14px}}
+.feedback{width:100%;max-width:560px;margin:12px auto 0;border-radius:15px;background:#EEF2E6;padding:9px 12px;font-size:13px;line-height:1.45;color:#38583F}
+.feedback.has-error{background:#FFF0E5;border:1px solid #D99466;color:#713D27}.feedback p{margin:0}.feedback-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.feedback button{min-height:44px;padding:5px 12px;background:#FFFFFFB0;border-radius:11px;font-weight:500}.hint-card{border-top:1px solid #B5C4A9;margin-top:8px;padding-top:8px}.hint-card h3{font-size:14px;margin:0 0 4px}
+.cell.err{animation:none}.cell.err::after{inset:3px;border:3px solid #93472F;border-radius:9px;background:transparent;animation:none}.cell.err .dino::after{content:'!';position:absolute;right:2px;top:2px;border-radius:50%;width:17px;height:17px;display:grid;place-items:center;background:#713D27;color:white;font:bold 13px system-ui;border:1px solid white}.cell.reaction .dino svg{animation:shake .3s}.cell.conflict-area{box-shadow:inset 0 0 0 3px #93472F66}.cell.hint::after{animation:none;background:#FFFFFF30;border:2px dashed #526B36;inset:3px;border-radius:7px}.cell.hint-focus::after{border:3px solid #285841;background:#FFFFFF50}.cell.hint-focus .dino,.cell.hint-focus .x{z-index:1}
+.board.patterns .cell::before{content:attr(data-region);position:absolute;top:3px;left:4px;font:600 10px system-ui;color:#304B39;background:#FFFFFFB8;border-radius:3px;padding:0 2px;pointer-events:none}.board.patterns .cell{background-image:var(--pattern)!important;background-size:12px 12px!important}.cell .dino,.cell .x{z-index:1}
+.practice{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;max-width:300px;margin:16px auto}.practice button{aspect-ratio:1;min-height:48px;border-radius:9px;background:var(--c3);position:relative}.practice svg{width:90%;height:90%;margin:auto;pointer-events:none}.practice .target{outline:3px dashed #285841;outline-offset:-4px}.practice .practice-error{box-shadow:inset 0 0 0 3px #93472F}.practice-caption{text-align:center;min-height:48px}.tutorial-status{min-height:42px;text-align:center;color:#285841!important}.progress-track{height:4px;background:#D8E2CB;border-radius:4px;margin-top:7px;overflow:hidden}.progress-track span{display:block;height:100%;background:#558547;transition:width .2s}
+@media(min-width:850px) and (min-height:650px){.feedback{grid-column:2;grid-row:4}.playbar{grid-row:5}.tip{grid-row:6}.controls{grid-row:5 / span 2}.board{max-width:min(560px,calc(100dvh - 350px))}}
+@media(max-width:599px){.feedback{font-size:12px;margin-top:10px;padding:8px 10px}.intro p{display:none}.intro{padding-bottom:8px}.intro h2{font-size:20px}.intro svg{width:48px;height:48px}.playbar{margin-top:10px}.board{max-width:min(100%,calc(100dvh - 440px))}.sheet{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body>
+
+<!-- ===== SVG sprite: Yo the dino (original character) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+<g id="yo-body" stroke="#285841" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+ <ellipse cx="51" cy="94" rx="33" ry="4" fill="#285841" opacity=".12" stroke="none"/>
+ <path d="M66 71Q88 82 91 61Q100 83 74 86" fill="#78CE72"/>
+ <path d="M64 28l12-3-3 13 10 3-8 10 8 8-14 5" fill="#FF997D"/>
+ <path d="M39 57Q23 67 33 85Q51 96 70 81L68 55" fill="#78CE72"/>
+ <ellipse cx="49" cy="73" rx="14" ry="17" fill="#FFFBE4" stroke="none"/>
+ <path d="M33 83Q20 81 19 91Q20 96 41 94L44 87" fill="#EF9870"/>
+ <path d="M59 85Q65 80 73 86Q85 86 81 94H59Z" fill="#EF9870"/>
+ <path d="M21 91h19M61 91h18" stroke="#FFCE9E"/>
+ <path d="M65 62Q79 57 78 65Q76 72 68 74" fill="#78CE72"/>
+ <path d="M30 37Q27 14 40 12Q48 9 51 19Q57 6 65 12Q77 20 72 40L64 55H37Z" fill="#78CE72"/>
+ <ellipse cx="41" cy="29" rx="8" ry="13" fill="#FFFDF4" stroke="none"/>
+ <ellipse cx="60" cy="27" rx="8" ry="13" fill="#FFFDF4" stroke="none"/>
+</g>
+<symbol id="yo" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M37 57Q47 61 55 56" fill="none" stroke="#285841" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="yo-head" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M37 57Q47 61 55 56" fill="none" stroke="#285841" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="yo-happy" viewBox="0 0 100 100"><use href="#yo-body"/><path d="M37 29q5-8 10 0M55 27q5-8 10 0" stroke="#285841" stroke-width="3" fill="none" stroke-linecap="round"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M35 55Q46 72 56 55Z" fill="#864A4F"/><path d="M40 60q6-4 11 0" stroke="#F9ADAF" stroke-width="3"/><path d="M12 15v10M7 20h10M84 32v8M80 36h8" stroke="#E9AE39" stroke-width="3" stroke-linecap="round"/></symbol>
+<symbol id="yo-oops" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><ellipse cx="46" cy="57" rx="3" ry="4" fill="#864A4F"/><path d="M80 17q-9 13 0 13q8 0 0-13" fill="#8DCFEF"/></symbol>
+    <symbol id="egg" viewBox="0 0 100 100">
+      <path d="M50 12 C 30 12, 22 40, 22 58 C 22 78, 34 90, 50 90 C 66 90, 78 78, 78 58 C 78 40, 70 12, 50 12 Z" fill="#FFFDF7" stroke="#8FA394" stroke-width="3"/>
+      <circle cx="40" cy="40" r="5" fill="#7FCB85"/><circle cx="58" cy="52" r="6" fill="#7FCB85"/><circle cx="42" cy="66" r="4.5" fill="#7FCB85"/><circle cx="60" cy="30" r="3.5" fill="#7FCB85"/>
+    </symbol>
+    <symbol id="xmark" viewBox="0 0 100 100">
+      <path d="M22 22 L78 78 M78 22 L22 78" stroke="#2B3A2E" stroke-width="14" stroke-linecap="round"/>
+    </symbol>
+    <!-- UI icons -->
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h9.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 3a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7V17h6v-.5c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 3Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M6 3v4h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 22c4.4 0 7-2.8 7-6.6 0-3.2-2-5.3-3.4-7.2-.5 1.4-1.3 2.3-2.4 2.6.3-3-1-6.3-3.6-7.8.2 2.6-1 4.4-2.4 6.2C5.9 10.9 5 12.7 5 15.4 5 19.2 7.6 22 12 22Z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<header>
+  <div class="logo">
+    <svg class="mark" aria-hidden="true"><use href="#yo-head"/></svg>
+    <h1>Yo<span>doku</span></h1>
+  </div>
+  <div class="hdr-right">
+    <button class="iconbtn" id="btnHelp" aria-label="How to play"><svg width="26" height="26"><use href="#i-help"/></svg></button>
+    <button class="iconbtn" id="btnSettings" aria-label="Settings"><svg width="26" height="26"><use href="#i-gear"/></svg></button>
+  </div>
+</header>
+
+<section class="intro" aria-label="Welcome"><div><h2>A little puzzle.<br>A happy place.</h2><p>One dino in every row, column &amp; colour.<br>Give each friend a little space.</p></div><svg aria-hidden="true"><use href="#yo-happy"/></svg></section>
+<nav class="tabs" role="tablist" aria-label="Puzzle mode">
+  <button class="tab" role="tab" data-mode="easy">Easy<i class="dot"></i></button>
+  <button class="tab" role="tab" data-mode="normal">Normal<i class="dot"></i></button>
+  <button class="tab" role="tab" data-mode="hard">Hard<i class="dot"></i></button>
+  <button class="tab" role="tab" data-mode="ultra">Ultra<i class="dot"></i></button>
+  <button class="tab" role="tab" data-mode="daily">Daily<i class="dot"></i></button>
+</nav>
+
+<div class="status">
+  <div id="levelLabel"><b>Level 1</b> · 7×7</div>
+  <div class="timer pill" id="timer">00:00</div>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board" role="grid" aria-label="Puzzle board">
+    <svg class="lines" id="lines" aria-hidden="true"></svg>
+  </div>
+</div>
+
+<section class="feedback" id="feedback" aria-label="Puzzle feedback">
+  <p id="feedbackMessage" role="status" aria-live="polite" aria-atomic="true">Give each dino a little space.</p>
+  <div class="progress-track" role="progressbar" id="settledProgress" aria-label="Dinos without conflicts" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><span></span></div>
+  <div class="feedback-actions hidden" id="conflictActions"><button id="btnShowConflict">Show conflict</button><button id="btnFeedbackUndo">Undo move</button></div>
+  <div class="hint-card hidden" id="hintCard"><h3 id="hintTitle">A little nudge</h3><p id="hintMessage" role="status" aria-live="polite"></p><div class="feedback-actions"><button id="btnHintMore">Explain why</button><button id="btnHintDismiss">Dismiss hint</button></div></div>
+</section>
+<div class="playbar"><div class="tools" role="group" aria-label="Tap tool"><button class="tool" data-tool="cycle" aria-pressed="true">Cycle</button><button class="tool" data-tool="dino" aria-pressed="false">Dino</button><button class="tool" data-tool="x" aria-pressed="false">X mark</button></div><button class="auto-toggle" id="btnAutoX" aria-pressed="false">Auto X · Off</button></div><p class="tip" id="inputTip">Tap: X → dino → clear · Drag to mark Xs</p>
+<div class="controls">
+  <button class="ctl" id="btnUndo" disabled><svg><use href="#i-undo"/></svg>Undo</button>
+  <button class="ctl" id="btnHint"><svg><use href="#i-bulb"/></svg>Hint</button>
+  <button class="ctl" id="btnClear"><svg><use href="#i-clear"/></svg>Clear</button>
+  <button class="ctl primary" id="btnNew"><svg><use href="#i-next"/></svg>New</button>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas class="confetti hidden" id="confetti"></canvas>
+
+<!-- ===== How to play ===== -->
+<div class="scrim" id="helpModal">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="grab"></div>
+    <h2 id="helpTitle">How to play</h2>
+    <p style="text-align:center">Help every dino find a home!</p>
+    <div class="rule"><div class="ico" style="background:var(--c4)"><svg width="40" height="40"><use href="#yo"/></svg></div><div><b>One dino per row &amp; column</b><span>Just like sudoku — no two dinos share a line.</span></div></div>
+    <div class="rule"><div class="ico" style="background:linear-gradient(135deg,var(--c0) 50%,var(--c2) 50%)"><svg width="40" height="40"><use href="#yo"/></svg></div><div><b>One dino per colour</b><span>Each colour region gets exactly one dino.</span></div></div>
+    <div class="rule"><div class="ico" style="background:var(--c5)"><svg width="40" height="40"><use href="#yo-oops"/></svg></div><div><b>Dinos never touch</b><span>Not even diagonally — they need personal space.</span></div></div>
+    <div class="rule"><div class="ico" style="background:var(--c7)"><svg width="30" height="30"><use href="#xmark"/></svg></div><div><b>Tap to mark, tap again to place</b><span>Cycle: tap for X → dino → clear. Choose Dino or X mark for direct taps. Drag to mark or erase Xs. Auto X is optional and starts off. Keyboard: arrows to move, D for dino, X for a note, Delete to clear.</span></div></div>
+    <p style="text-align:center;font-size:14px">Every puzzle has exactly one solution and can be solved with logic alone — no guessing needed.</p>
+    <button class="big" id="btnTutorial">Try a 30-second practice</button>
+    <button class="big ghost" id="btnHelpClose">Let's go!</button>
+  </div>
+</div>
+
+<!-- ===== Settings ===== -->
+<div class="scrim" id="settingsModal">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="grab"></div>
+    <h2 id="settingsTitle">Settings</h2>
+    <div class="setting"><div><b>Auto X</b><small>Placing a dino marks its row, column, colour and neighbours.</small></div><button class="switch" role="switch" data-setting="autoX" aria-checked="false"></button></div>
+    <div class="setting"><div><b>Show mistakes</b><small>Highlight dinos that break a rule.</small></div><button class="switch" role="switch" data-setting="showErrors" aria-checked="true"></button></div>
+    <div class="setting"><div><b>Check against solution</b><small>Optional extra help: flag incorrect dino placements, even without a rule conflict.</small></div><button class="switch" role="switch" data-setting="checkSolution" aria-checked="false"></button></div>
+    <div class="setting"><div><b>Region patterns &amp; numbers</b><small>Tell regions apart without relying on colour.</small></div><button class="switch" role="switch" data-setting="patterns" aria-checked="false"></button></div>
+    <div class="setting"><div><b>Sounds</b><small>Little pops and chirps.</small></div><button class="switch" role="switch" data-setting="sound" aria-checked="true"></button></div>
+    <div class="setting"><div><b>Haptics</b><small>Vibration on supported phones.</small></div><button class="switch" role="switch" data-setting="haptics" aria-checked="true"></button></div>
+    <div class="setting"><div><b>Timer</b><small>Show the clock while playing.</small></div><button class="switch" role="switch" data-setting="showTimer" aria-checked="true"></button></div>
+    <h2 style="font-size:18px;margin-top:16px">Your stats</h2>
+    <div class="statgrid" id="statGrid"></div>
+    <button class="big ghost" id="btnSettingsClose">Done</button>
+  </div>
+</div>
+
+<div class="scrim" id="tutorialModal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle"><div class="grab"></div><h2 id="tutorialTitle">Meet your little neighbours</h2><p class="practice-caption" id="tutorialInstruction"></p><div class="practice" id="practiceBoard" role="group" aria-label="Practice board"></div><p class="tutorial-status" id="tutorialStatus" role="status" aria-live="polite"></p><button class="big" id="btnTutorialNext">Next step</button><button class="big ghost" id="btnTutorialClose">Back to my puzzle</button></div></div>
+<!-- ===== Win ===== -->
+<div class="scrim" id="winModal">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="grab"></div>
+    <div class="win-hero"><svg><use href="#yo-happy"/></svg></div>
+    <h2 id="winTitle">Everyone's home!</h2>
+    <p style="text-align:center" id="winSub">Nicely done.</p>
+    <p style="text-align:center;font-size:14px">Every row, column and region has a friend.<br>Everyone has room to wiggle.</p>
+    <div class="stats">
+      <div class="stat"><b id="winTime">00:00</b><span>Time</span></div>
+      <div class="stat"><b id="winBest">—</b><span>Best</span></div>
+      <div class="stat"><b id="winHints">0</b><span>Hints</span></div>
+    </div>
+    <div class="emoji-grid" id="winGrid"></div>
+    <div class="row2">
+      <button class="big ghost" id="btnShare"><svg width="22" height="22"><use href="#i-share"/></svg>Share</button>
+      <button class="big" id="btnWinNext"><svg width="22" height="22"><use href="#i-next"/></svg>Next</button>
+    </div>
+  </div>
+</div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
