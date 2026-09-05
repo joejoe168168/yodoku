@@ -19,6 +19,9 @@ On iPhone: open the page in Safari → Share → **Add to Home Screen**. It laun
 respects the notch/home-bar safe areas, and works offline after the first visit.
 
 ## Features
+- Compact phone layout keeps the board nearly full width, hides the welcome banner during play, and uses one-row controls. On small landscape screens the controls sit beside the board. Idle feedback collapses; mistakes and hints expand when needed.
+- Tap **7 colours** (or the current board's colour count) to inspect every region, including tiny one-square regions. Select a numbered colour to highlight its squares. One-square regions are valid puzzle clues.
+- Generated and saved boards are checked for exactly N connected regions and a valid solution. Invalid saved boards are backed up under `yodoku.recovery.<mode>` in local storage before a fresh puzzle is loaded.
 - Endless generated puzzles at **Easy 6×6 · Normal 7×7 · Hard 8×8 · Ultra 9×9**, each with exactly one
   solution and solvable by pure logic (no guessing).
 - **Daily** puzzle — same board for everyone each day, with streaks.
@@ -36,6 +39,8 @@ respects the notch/home-bar safe areas, and works offline after the first visit.
 - Progress, the exact puzzle layout, and undo history are saved per mode in `localStorage`, so you can switch tabs or reload and come back. The timer pauses in Help/Settings and while the page is hidden. Reduced-motion preferences disable confetti and board transitions.
 
 ## Browser checks
+
+Run `node qa-regions.cjs` for a 1,000-puzzle regression covering region counts, connectivity, valid placements, uniqueness, and malformed data across all four difficulties.
 Run `npm install --prefix .qa --no-audit --no-fund playwright sharp`, then `node qa.cjs` (uses installed Microsoft Edge). This checks manual/automatic notes, persistence, keyboard and touch input, drag undo, rule feedback, invalid completion, solution checking, patterns, graduated hints, the separate touch tutorial, reduced-motion completion, and responsive layouts. It also regenerates the icons and preview screenshots. Phone coverage uses browser touch emulation; physical Safari/iOS and Android checks are still recommended.
 
 ## Files

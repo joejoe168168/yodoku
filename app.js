@@ -73,6 +73,7 @@
   const board = $('#board'), linesEl = $('#lines');
   let cellEls = [];
   let visibleIssues = [], issueIndex = 0, areaTimer = 0, reactionTimer = 0, winTimer = 0;
+  let restoredInvalid = false;
 
   function newSeed() {
     if (window.crypto && crypto.getRandomValues) { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0]; }
@@ -113,6 +114,11 @@
       const p = s.puzzle || (m === 'daily'
         ? Y.generate({ difficulty: Y.dailyDifficulty(s.dateStr), size: Y.dailySize(s.dateStr), seed: Y.dailySeed(s.dateStr) })
         : Y.generate({ difficulty: m, seed: s.seed }));
+      const expectedN = m === 'daily' ? Y.dailySize(s.dateStr) : Y.DIFFS[m].n;
+      if (!Y.validatePuzzle(p) || p.n !== expectedN) {
+        // Keep the old save recoverable if it contains a missing or broken region.
+        LS.set('recovery.' + m, s); restoredInvalid = true; return null;
+      }
       if (!s.cells || s.cells.length !== p.n * p.n) return null;
       const loaded = makeGame(p, { cells: s.cells, autoOwner: s.autoOwner || new Array(p.n * p.n).fill(-1), history: s.history || [], elapsed: s.elapsed || 0, hints: s.hints || 0, solved: !!s.solved, dateStr: s.dateStr || null });
       if (!settings.autoX) clearAutomatic(loaded);
@@ -133,6 +139,19 @@
   // ---------- rendering ----------
   function buildBoard() {
     const { n, region } = game.puzzle;
+    $('#regionInspector').classList.add('hidden');
+    $('#btnRegions').setAttribute('aria-expanded', 'false');
+    $('#btnRegions').textContent = `${n} colours`;
+    const regionButtons = $('#regionButtons'); regionButtons.innerHTML = '';
+    for (let g = 0; g < n; g++) {
+      const count = region.filter(id => id === g).length;
+      const button = document.createElement('button');
+      button.textContent = g + 1; button.style.background = `var(--c${game.colors[g]})`;
+      button.setAttribute('aria-label', `Region ${g + 1}, ${count} ${count === 1 ? 'square' : 'squares'}`);
+      button.setAttribute('aria-pressed', 'false');
+      button.addEventListener('click', () => inspectRegion(g)); regionButtons.appendChild(button);
+    }
+    regionButtons.style.setProperty('--regions', n);
     board.style.setProperty('--n', n);
     board.setAttribute('aria-rowcount', n);
     board.setAttribute('aria-colcount', n);
@@ -204,6 +223,8 @@
     const { n, region } = game.puzzle, conflicts = Y.conflicts(n, region, game.cells);
     const issue = visibleIssues[issueIndex], placed = conflicts.count;
     $('#feedback').classList.toggle('has-error', !!issue);
+    $('#feedback').classList.toggle('has-hint', !!activeHint);
+    $('#feedback').classList.toggle('has-region', !$('#regionInspector').classList.contains('hidden'));
     $('#feedbackMessage').textContent = game.solved ? "Everyone’s home! You made a happy little neighbourhood." : issue ?
       (placed >= n ? 'Nearly home! ' : '') + issue.message : 'One per row, column & region. No touching—even diagonally.';
     $('#conflictActions').classList.toggle('hidden', !issue);
@@ -216,6 +237,23 @@
     $('span', progress).style.width = `${settled / n * 100}%`;
     return settled;
   }
+  function inspectRegion(g) {
+    cellEls.forEach((el, i) => { el.classList.toggle('region-selected', game.puzzle.region[i] === g); el.classList.toggle('region-muted', game.puzzle.region[i] !== g); });
+    Array.from($('#regionButtons').children).forEach((button, i) => button.setAttribute('aria-pressed', String(i === g)));
+    const count = game.puzzle.region.filter(id => id === g).length;
+    $('#regionMessage').textContent = `Region ${g + 1}: ${count} ${count === 1 ? 'square' : 'squares'}. It needs one dino.`;
+  }
+  function closeRegionInspector() {
+    cellEls.forEach(el => el.classList.remove('region-selected', 'region-muted'));
+    $('#regionInspector').classList.add('hidden'); $('#btnRegions').setAttribute('aria-expanded', 'false');
+    if (game) renderFeedback();
+  }
+  $('#btnRegions').addEventListener('click', () => {
+    if (!$('#regionInspector').classList.contains('hidden')) { closeRegionInspector(); return; }
+    clearHints(); $('#regionInspector').classList.remove('hidden'); $('#btnRegions').setAttribute('aria-expanded', 'true');
+    inspectRegion(0); renderFeedback();
+  });
+  $('#btnRegionsClose').addEventListener('click', () => { closeRegionInspector(); $('#btnRegions').focus(); });
   function highlightConflict() {
     clearTimeout(areaTimer); cellEls.forEach(el => el.classList.remove('conflict-area'));
     const issue = visibleIssues[issueIndex];
@@ -328,6 +366,7 @@
 
   function tapCell(i, value) {
     if (game.solved) return;
+    closeRegionInspector();
     clearHints();
     const cur = game.cells[i], next = value !== undefined ? value : settings.tool === 'dino' ? (cur === 2 ? 0 : 2) : settings.tool === 'x' ? (cur === 1 ? 0 : cur === 2 ? 2 : 1) : (cur + 1) % 3;
     if (cur === next) return;
@@ -394,10 +433,11 @@
   let activeHint = null;
   function clearHints() {
     for (const el of cellEls) el.classList.remove('hint', 'hint-focus', 'conflict-area');
-    clearTimeout(areaTimer); activeHint = null; $('#hintCard').classList.add('hidden');
+    clearTimeout(areaTimer); activeHint = null; $('#hintCard').classList.add('hidden'); $('#feedback').classList.remove('has-hint');
   }
   function showHint() {
     if (!game || game.solved) return;
+    closeRegionInspector();
     if (activeHint) { $('#hintCard').scrollIntoView({ block: 'nearest', behavior: 'instant' }); return; }
     clearHints();
     const h = Y.hint(game.puzzle, game.cells);
@@ -413,6 +453,7 @@
   function renderHint() {
     const { h, stage } = activeHint;
     $('#hintCard').classList.remove('hidden');
+    $('#feedback').classList.add('has-hint');
     $('#hintTitle').textContent = ['A little nudge · 1/3', 'The reasoning · 2/3', 'The next step · 3/3'][stage - 1];
     let message = stage === 1 ? 'Look at the outlined area. What still fits here?' :
       h.kind === 'wrong' ? 'A dino in this region is not in its solution spot. Reconsider its home.' :
@@ -655,6 +696,7 @@
     game = loadGame(m) || freshPuzzle(m);
     if (game.solved && m !== 'daily') { game = freshPuzzle(m); }
     buildBoard(); updateTabDots(); saveGame();
+    if (restoredInvalid) { restoredInvalid = false; toast('A saved puzzle had invalid regions. A fresh puzzle is ready; your old save is backed up.', 5000); }
   }
   for (const t of $$('.tab')) t.addEventListener('click', () => { if (t.dataset.mode !== mode) { buzz(6); switchMode(t.dataset.mode); } });
 

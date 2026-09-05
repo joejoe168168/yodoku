@@ -315,7 +315,7 @@
       const region = growRegions(n, sol, r);
       let unique = countSolutions(n, region, 2) === 1;
       if (!unique) unique = repair(n, region, sol, r);
-      if (unique) {
+      if (unique && validatePuzzle({ n, region: Array.from(region), sol })) {
         cands++;
         const score = rate(n, region);
         const dist = score < diff.min ? diff.min - score : score > diff.max ? score - diff.max : 0;
@@ -325,8 +325,23 @@
       if (best && (cands >= maxCands || now() - t0 > budgetMs)) break;
       if (tries > 5000) break;
     }
+    if (!best) throw new Error('Unable to generate a valid puzzle');
     best.seed = opts.seed >>> 0; best.difficulty = opts.difficulty; best.tries = tries;
     return best;
+  }
+
+  // Check generated and restored boards before they reach the player.
+  // Every colour must exist, be connected, and contain one solution dino.
+  function validatePuzzle(puzzle) {
+    if (!puzzle) return false;
+    const { n, region, sol } = puzzle;
+    if (!Number.isInteger(n) || n < 4 || n > 9 || !Array.isArray(region) || region.length !== n * n || !Array.isArray(sol) || sol.length !== n) return false;
+    if (region.some(g => !Number.isInteger(g) || g < 0 || g >= n) || new Set(region).size !== n) return false;
+    if (sol.some(c => !Number.isInteger(c) || c < 0 || c >= n) || new Set(sol).size !== n) return false;
+    const homes = sol.map((c, row) => row * n + c);
+    if (new Set(homes.map(i => region[i])).size !== n) return false;
+    for (let row = 1; row < n; row++) if (Math.abs(sol[row] - sol[row - 1]) <= 1) return false;
+    return homes.every(i => regionConnected(n, region, region[i], i));
   }
 
   // ---------- gameplay helpers ----------
@@ -401,5 +416,5 @@
   }
   function dailyDifficulty(dateStr) { const n = dailySize(dateStr); return n <= 6 ? 'easy' : n === 7 ? 'normal' : n === 8 ? 'hard' : 'ultra'; }
 
-  return { _i: { randomSolution, growRegions, repair, findSolutions }, rng, hashString, generate, countSolutions, logicSolve, rate, conflicts, conflictDetails, isSolved, coverage, hint, dailySeed, dailySize, dailyDifficulty, DIFFS };
+  return { _i: { randomSolution, growRegions, repair, findSolutions }, rng, hashString, generate, validatePuzzle, countSolutions, logicSolve, rate, conflicts, conflictDetails, isSolved, coverage, hint, dailySeed, dailySize, dailyDifficulty, DIFFS };
 });

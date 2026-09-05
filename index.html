@@ -177,6 +177,24 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
 .practice{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;max-width:300px;margin:16px auto}.practice button{aspect-ratio:1;min-height:48px;border-radius:9px;background:var(--c3);position:relative}.practice svg{width:90%;height:90%;margin:auto;pointer-events:none}.practice .target{outline:3px dashed #285841;outline-offset:-4px}.practice .practice-error{box-shadow:inset 0 0 0 3px #93472F}.practice-caption{text-align:center;min-height:48px}.tutorial-status{min-height:42px;text-align:center;color:#285841!important}.progress-track{height:4px;background:#D8E2CB;border-radius:4px;margin-top:7px;overflow:hidden}.progress-track span{display:block;height:100%;background:#558547;transition:width .2s}
 @media(min-width:850px) and (min-height:650px){.feedback{grid-column:2;grid-row:4}.playbar{grid-row:5}.tip{grid-row:6}.controls{grid-row:5 / span 2}.board{max-width:min(560px,calc(100dvh - 350px))}}
 @media(max-width:599px){.feedback{font-size:12px;margin-top:10px;padding:8px 10px}.intro p{display:none}.intro{padding-bottom:8px}.intro h2{font-size:20px}.intro svg{width:48px;height:48px}.playbar{margin-top:10px}.board{max-width:min(100%,calc(100dvh - 440px))}.sheet{padding-left:16px;padding-right:16px}}
+/* Compact play layout: keep the board full width and the surrounding controls small. */
+.region-toggle{min-height:28px;padding:2px 8px;border-radius:9px;color:#285841;font-size:12px;background:#E8ECDD;text-decoration:underline;text-underline-offset:2px}
+.region-inspector{margin-top:6px}.region-buttons{display:grid;grid-template-columns:repeat(var(--regions),minmax(0,1fr));gap:3px;margin:7px 0}.feedback .region-buttons button{min-height:44px;padding:0;border:2px solid transparent;color:#253D32}.feedback .region-buttons button[aria-pressed="true"]{border-color:#285841;box-shadow:inset 0 0 0 2px white}.cell.region-muted{opacity:.25}.cell.region-selected{box-shadow:inset 0 0 0 3px #285841;z-index:1}.cell .dino svg{width:84%;height:84%}.cell .dino{inset:2px}
+@media(max-width:599px){
+ body{padding:calc(var(--sat) + 4px) calc(var(--sar) + 8px) calc(var(--sab) + 6px) calc(var(--sal) + 8px);justify-content:flex-start}
+ header{padding:0 0 4px;gap:6px}.logo{gap:3px}.logo .mark{width:36px;height:36px}.logo h1{font-size:27px}.hdr-right{gap:6px}.iconbtn{width:44px;height:44px;border-radius:13px;box-shadow:0 2px 4px #38583F12}
+ .intro{display:none}.tabs{margin-bottom:2px;padding:3px;border-radius:14px}.tab{min-height:38px;font-size:13px;border-radius:11px}
+ .status{padding:2px 2px 4px;font-size:12px;min-height:30px;gap:4px}.pill{padding:3px 6px}.region-toggle{font-size:11px}
+ .board-wrap{width:100%;margin:0}.board{width:100%;max-width:100%;min-width:0;border-radius:13px;box-shadow:0 4px 0 #D9DFC9}
+ .feedback:not(.has-error):not(.has-hint):not(.has-region){display:none}.feedback{margin-top:8px;padding:7px 9px}.feedback-actions{margin-top:4px}.feedback button{min-height:44px}.feedback.has-hint:not(.has-error) > #feedbackMessage,.feedback.has-hint:not(.has-error) > .progress-track{display:none}.hint-card{border:0;padding-top:0;margin-top:0}
+ .playbar{margin-top:8px;gap:6px}.tools{padding:3px;gap:2px;border-radius:13px;flex:1}.tool{min-width:0;min-height:40px;padding:0 8px;flex:1;font-size:12px;border-radius:10px}.auto-toggle{min-height:44px;font-size:11px;padding:0 9px;border-radius:13px}
+ .tip{font-size:11px;line-height:16px;min-height:16px;margin-top:3px}.controls{padding:4px 0 2px;gap:6px}.ctl{min-height:44px;flex-direction:row;gap:4px;font-size:11px;border-radius:13px;box-shadow:0 2px 0 #E5E8DD}.ctl svg{width:18px;height:18px}
+ .toast{top:auto;bottom:calc(var(--sab) + 65px);font-size:13px;padding:8px 12px}
+}
+@media(max-height:500px) and (min-width:600px) and (orientation:landscape){
+ body{display:grid;grid-template-columns:minmax(240px,1fr) minmax(280px,calc(100dvh - 20px));column-gap:16px;align-content:center;padding:8px 16px;max-width:1000px;margin:auto}
+ header{grid-column:1;grid-row:1;padding:0}.logo .mark{width:32px;height:32px}.logo h1{font-size:26px}.intro{display:none}.tabs{grid-column:1;grid-row:2;margin:0}.tab{min-height:36px;font-size:12px}.status{grid-column:1;grid-row:3;font-size:12px;padding:0}.board-wrap{grid-column:2;grid-row:1 / span 7;margin:0}.board{min-width:0;max-width:100%;width:100%}.feedback{grid-column:1;grid-row:4;max-height:120px;overflow:auto;margin:0;padding:5px 8px}.feedback:not(.has-error):not(.has-hint):not(.has-region){display:none}.playbar{grid-column:1;grid-row:5;margin:0}.tool{min-width:0;padding:0 8px}.tip{grid-column:1;grid-row:6;margin:0;font-size:11px}.controls{grid-column:1;grid-row:7;padding:0;gap:5px}.ctl{min-height:44px;font-size:11px;flex-direction:row}.ctl svg{width:18px;height:18px}
+}
 </style>
 </head>
 <body>
@@ -243,6 +261,7 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
 
 <div class="status">
   <div id="levelLabel"><b>Level 1</b> · 7×7</div>
+  <button id="btnRegions" class="region-toggle" aria-expanded="false" aria-controls="regionInspector">7 colours</button>
   <div class="timer pill" id="timer">00:00</div>
 </div>
 
@@ -257,6 +276,7 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
   <div class="progress-track" role="progressbar" id="settledProgress" aria-label="Dinos without conflicts" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0"><span></span></div>
   <div class="feedback-actions hidden" id="conflictActions"><button id="btnShowConflict">Show conflict</button><button id="btnFeedbackUndo">Undo move</button></div>
   <div class="hint-card hidden" id="hintCard"><h3 id="hintTitle">A little nudge</h3><p id="hintMessage" role="status" aria-live="polite"></p><div class="feedback-actions"><button id="btnHintMore">Explain why</button><button id="btnHintDismiss">Dismiss hint</button></div></div>
+  <div class="region-inspector hidden" id="regionInspector"><p id="regionMessage" role="status" aria-live="polite"></p><div class="region-buttons" id="regionButtons" role="group" aria-label="Puzzle colours"></div><button id="btnRegionsClose">Back to puzzle</button></div>
 </section>
 <div class="playbar"><div class="tools" role="group" aria-label="Tap tool"><button class="tool" data-tool="cycle" aria-pressed="true">Cycle</button><button class="tool" data-tool="dino" aria-pressed="false">Dino</button><button class="tool" data-tool="x" aria-pressed="false">X mark</button></div><button class="auto-toggle" id="btnAutoX" aria-pressed="false">Auto X · Off</button></div><p class="tip" id="inputTip">Tap: X → dino → clear · Drag to mark Xs</p>
 <div class="controls">

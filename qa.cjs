@@ -19,11 +19,15 @@ const fs=require('fs'),http=require('http'),assert=require('assert/strict');
  await page.locator('#btnClear').click();await page.locator('[data-tool="dino"]').click();await cell.nth(16).click();
  await page.waitForTimeout(2400);await page.screenshot({path:'preview-desktop.png',fullPage:true});
  await page.locator('#btnSettings').click();await page.keyboard.press('Escape');assert.equal(await page.locator('.scrim.open').count(),0);
- for(const [width,height] of [[390,844],[320,568],[768,1024],[844,390]]){
+ for(const [width,height] of [[390,844],[320,568],[360,640],[375,667],[768,1024],[844,390]]){
   await page.setViewportSize({width,height});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  const b=await page.locator('#board').boundingBox();assert.ok(b.width>=270);await page.screenshot({path:`preview-${width}.png`,fullPage:true});
+  const b=await page.locator('#board').boundingBox();assert.ok(b.width>=270);
+  if(width<600){assert.ok(b.width>=width-20,'board should use nearly all phone width');assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+2),'idle game and controls should fit the phone viewport');}
+  await page.screenshot({path:`preview-${width}.png`,fullPage:true});
  }
  const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const mp=await mobile.newPage();await mp.goto('http://127.0.0.1:8080');await mp.getByRole('button',{name:"Let's go!"}).tap();await mp.locator('[data-tool="dino"]').tap();await mp.locator('.cell').nth(0).tap();assert.equal(await mp.locator('.dino').count(),1);assert.equal(await mp.locator('.x').count(),0);
+ await mp.locator('#btnRegions').tap();assert.equal(await mp.locator('#regionButtons button').count(),7);for(let g=0;g<7;g++){await mp.locator('#regionButtons button').nth(g).tap();assert.ok(await mp.locator('.region-selected').count()>0);}await mp.screenshot({path:'preview-regions-mobile.png',fullPage:true});await mp.locator('#btnRegionsClose').tap();assert.equal(await mp.locator('.region-muted').count(),0);
+ for(const mode of ['easy','normal','hard','ultra']){await mp.locator(`[data-mode="${mode}"]`).tap();const rendered=await mp.locator('.cell').evaluateAll(els=>({regions:new Set(els.map(el=>el.dataset.region)).size,colours:new Set(els.map(el=>getComputedStyle(el).backgroundColor)).size,n:Math.sqrt(els.length)}));assert.equal(rendered.regions,rendered.n);assert.equal(rendered.colours,rendered.n);}await mp.locator('[data-mode="normal"]').tap();
  await page.setViewportSize({width:390,height:844});await page.locator('#btnClear').click();await page.locator('[data-tool="x"]').click();
  const a=await cell.nth(0).boundingBox(),b=await cell.nth(3).boundingBox();await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:20});await page.mouse.up();assert.equal(await page.locator('.x').count(),4);await page.locator('#btnUndo').click();assert.equal(await page.locator('.x').count(),0);
  // Rule feedback is immediate, persistent, and does not reveal legal-but-wrong placements.
@@ -43,6 +47,16 @@ const fs=require('fs'),http=require('http'),assert=require('assert/strict');
  await page.setViewportSize({width:320,height:568});await page.locator('#btnHint').click();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.locator('#btnHintMore').click();await page.locator('#btnHintMore').click();await page.locator('#btnHintDismiss').click();
  await page.emulateMedia({reducedMotion:'reduce'});for(let r=0;r<puzzle.n;r++)await cell.nth(r*puzzle.n+puzzle.sol[r]).click();await page.locator('#winModal.open').waitFor();assert.equal(await page.locator('.board.won').count(),1);assert.equal(await page.locator('#confetti.hidden').count(),1);assert.equal(await page.locator('.dino use[href="#yo-happy"]').count(),puzzle.n);
  const Y=require('./engine');for(const [kind,pair] of [['row',[0,1]],['column',[0,4]],['diagonal',[0,5]],['region',[0,2]]]){const cells=Array(16).fill(0);pair.forEach(i=>cells[i]=2);assert.ok(Y.conflictDetails(4,Array(16).fill(0),cells).some(issue=>issue.kind===kind));}
- assert.deepEqual(errors,[]);console.log('PASS: existing controls, responsive/touch layouts, rule explanations, full invalid board, optional solution checking, patterns, graduated hints, independent touch tutorial, valid progress, reduced-motion celebration, all conflict types, no JS errors.');
+ const savedPuzzle=Y.generate({difficulty:'normal',seed:0});const brokenPuzzle={...savedPuzzle,region:savedPuzzle.region.map(g=>g===6?0:g)};
+ const recovery=await browser.newContext({viewport:{width:320,height:568}});
+ await recovery.addInitScript(p=>{localStorage.setItem('yodoku.settings',JSON.stringify({seenHelp:true}));localStorage.setItem('yodoku.game.normal',JSON.stringify({puzzle:p,seed:p.seed,cells:Array(49).fill(0),autoOwner:Array(49).fill(-1)}));},brokenPuzzle);
+ const rp=await recovery.newPage();rp.on('pageerror',e=>errors.push(e.message));await rp.goto('http://127.0.0.1:8080');
+ assert.equal(await rp.locator('.cell').evaluateAll(els=>new Set(els.map(el=>el.dataset.region)).size),7);
+ assert.equal(await rp.evaluate(()=>new Set(JSON.parse(localStorage.getItem('yodoku.recovery.normal')).puzzle.region).size),6);
+ assert.match(await rp.locator('#toast').innerText(),/invalid regions/);
+ const singleton=await browser.newContext({viewport:{width:320,height:568}});assert.ok(savedPuzzle.region.some(g=>savedPuzzle.region.filter(id=>id===g).length===1));
+ await singleton.addInitScript(p=>{localStorage.setItem('yodoku.settings',JSON.stringify({seenHelp:true}));localStorage.setItem('yodoku.game.normal',JSON.stringify({puzzle:p,seed:p.seed,cells:Array(49).fill(0),autoOwner:Array(49).fill(-1)}));},savedPuzzle);
+ const sp=await singleton.newPage();await sp.goto('http://127.0.0.1:8080');const tiny=savedPuzzle.region.find(g=>savedPuzzle.region.filter(id=>id===g).length===1);await sp.locator('#btnRegions').click();await sp.locator('#regionButtons button').nth(tiny).click();assert.equal(await sp.locator('.region-selected').count(),1);assert.match(await sp.locator('#regionMessage').innerText(),/1 square\./);
+ assert.deepEqual(errors,[]);console.log('PASS: compact phone viewport fit, full-width board, landscape, rendered N colours, singleton inspection, corrupt-save recovery, existing touch/keyboard gameplay and hints.');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
