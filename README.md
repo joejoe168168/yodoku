@@ -7,11 +7,11 @@ This is a Vercel-ready static site: `index.html` is the entry point and `vercel.
 A cute Queens-style logic puzzle. Place one dino in every **row**, **column** and **colour region** —
 and dinos never touch, not even diagonally. Starring **Yo**, an original chubby dinosaur.
 
-Tap the logo to cycle **Yodoku → Kodoku → Pigdoku**, or choose a character directly in Settings. Meet **Ko**, a round-eared koala carrying eucalyptus, and **Pip**, a pink pig with a curly tail. Switching keeps the same puzzle, notes, undo history and statistics. The choice persists after reload, including offline play.
+Tap the logo to cycle **Yodoku → Kodoku → Pigdoku → Sludoko**, or choose a character directly in Settings. Meet **Ko**, a round-eared koala carrying eucalyptus, **Pip**, a pink pig with a curly tail, and **Snoo**, a cosy brown sloth with little claws. Switching keeps the same puzzle, notes, undo history and statistics. The choice persists after reload, including offline play.
 
-All three characters have normal, happy and surprised expressions, placement sparkles, a greeting and a celebration. Ko has a soft eucalyptus/lavender palette and leaf confetti; Pip has blush/peach colours and heart confetti. Animations respect reduced motion. Sounds are short original chimes, with a lower, softer sound set for Ko and brighter bouncy chimes for Pip; Settings includes mute and a sound preview. Audio starts only after interaction.
+All four characters have normal, happy and surprised expressions, placement sparkles, a greeting and a celebration. Ko has a soft eucalyptus/lavender palette and leaf confetti; Pip has blush/peach colours and heart confetti; Snoo has warm woodland colours and low gentle chimes. Animations respect reduced motion. Sounds are short original chimes, with a lower, softer sound set for Ko and brighter bouncy chimes for Pip; Settings includes mute and a sound preview. Audio starts only after interaction.
 
-The [asset gallery](assets/index.html) includes SVG/PNG poses, six animated GIFs and eighteen WAV sound effects. GIFs are optional exports; gameplay uses lightweight SVG/CSS. The game shell caches sounds for offline play; the optional gallery exports are not precached. Installed home-screen branding remains Yodoku; the in-game title and browser favicon follow the selected character.
+The [asset gallery](assets/index.html) includes SVG/PNG poses, eight animated GIFs and twenty-four WAV sound effects. GIFs are optional exports; gameplay uses lightweight SVG/CSS. The game shell caches sounds for offline play; the optional gallery exports are not precached. Installed home-screen branding remains Yodoku; the in-game title and browser favicon follow the selected character.
 
 To regenerate the committed assets, run `npm install --prefix .qa --no-audit --no-fund sharp gifenc`, then `node build-assets.cjs`. This is a development tool; Vercel needs no build step.
 
