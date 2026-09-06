@@ -15,16 +15,17 @@
 
   // ---------- settings & stats ----------
   const settings = Object.assign({ autoX: false, showErrors: true, checkSolution: false, patterns: false, sound: true, haptics: true, showTimer: true, seenHelp: false, tool: 'cycle', character: 'dino' }, LS.get('settings', {}));
-  if (!['dino', 'koala', 'pig'].includes(settings.character)) settings.character = 'dino';
+  if (!['dino', 'koala', 'pig', 'sloth'].includes(settings.character)) settings.character = 'dino';
   const CHARACTERS = { dino: { title: 'Yodoku', name: 'Yo', prefix: 'Yo', symbol: 'yo', animal: 'dino', emoji: '🦖' }, koala: { title: 'Kodoku', name: 'Ko', prefix: 'Ko', symbol: 'ko', animal: 'koala', emoji: '🐨' }, pig: { title: 'Pigdoku', name: 'Pip', prefix: 'Pig', symbol: 'pig', animal: 'pig', emoji: '🐷' } };
+  CHARACTERS.sloth = { title: 'Sludoko', name: 'Snoo', prefix: 'Slu', symbol: 'sloth', animal: 'sloth', emoji: '🦥' };
   const nextCharacter = () => { const keys = Object.keys(CHARACTERS); return keys[(keys.indexOf(settings.character) + 1) % keys.length]; };
   const character = () => CHARACTERS[settings.character];
   const mascot = (face = '') => '#' + character().symbol + (face ? '-' + face : '');
   function characterText(text) {
-    return text.replace(/\b(?:dinos|koalas|pigs|dino|koala|pig)\b/gi, word => {
+    return text.replace(/\b(?:dinos|koalas|pigs|sloths|dino|koala|pig|sloth)\b/gi, word => {
       const animal = character().animal + (/s$/i.test(word) ? 's' : '');
       return /^[A-Z]/.test(word) ? animal[0].toUpperCase() + animal.slice(1) : animal;
-    }).replace(/\b(?:Yodoku|Kodoku|Pigdoku)\b/g, character().title).replace(/\b(?:Yo|Ko|Pip)\b/g, character().name);
+    }).replace(/\b(?:Yodoku|Kodoku|Pigdoku|Sludoko)\b/g, character().title).replace(/\b(?:Yo|Ko|Pip|Snoo)\b/g, character().name);
   }
   function translateCharacter(root = document.body) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -109,6 +110,7 @@
       audioContext();
       if (settings.character === 'koala') freq *= .75;
       if (settings.character === 'pig') freq *= 1.125;
+      if (settings.character === 'sloth') freq *= .625;
       const t = actx.currentTime + (when || 0);
       const o = actx.createOscillator(), g = actx.createGain();
       o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
@@ -750,13 +752,14 @@
     const skin = character(); document.body.dataset.character = settings.character;
     document.title = `${skin.title} — a cosy logic puzzle`;
     $('#brandPrefix').textContent = skin.prefix;
+    $('.brand-suffix').textContent = skin.title.slice(skin.prefix.length);
     const next = CHARACTERS[nextCharacter()];
     $('#btnCharacter').setAttribute('aria-label', `Switch to ${next.title}, the ${next.animal} theme`);
     $('link[rel="icon"]').setAttribute('href', settings.character === 'dino' ? 'icons/icon.svg' : `assets/${skin.symbol}-icon.svg`);
     for (const button of $$('.character-choice')) button.setAttribute('aria-pressed', String(button.dataset.character === settings.character));
     for (const use of $$('use')) {
       if (use.closest('defs,.character-choices')) continue;
-      const match = /^(?:#yo|#ko|#pig)(-happy|-oops|-head)?$/.exec(use.getAttribute('href') || '');
+      const match = /^(?:#yo|#ko|#pig|#sloth)(-happy|-oops|-head)?$/.exec(use.getAttribute('href') || '');
       if (match) use.setAttribute('href', '#' + skin.symbol + (match[1] || ''));
     }
     $('[data-tool="dino"]').textContent = skin.animal[0].toUpperCase() + skin.animal.slice(1);
