@@ -198,6 +198,28 @@ const Y = require('./engine');
       await page.evaluate(()=>Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.shared=data.text;}}));await page.locator('.cell').nth(6*7+p.sol[6]).click();await tick(page,1500);assert.equal(await page.locator('.dino use[href="#sloth-happy"]').count(),7);
       await page.locator('#btnShare').click();assert.match(await page.evaluate(()=>window.shared),/^Sludoko/);assert.equal((await page.evaluate(()=>window.shared)).split('🦥').length-1,7);
     },{'game.normal':almostSolved(p)});
+    await run('extreme has ten colours and preserves its saved puzzle',async page=>{
+      await page.setViewportSize({width:320,height:568});await page.locator('[data-mode="extreme"]').click();
+      const rendered=await page.locator('.cell').evaluateAll(els=>({count:els.length,colours:new Set(els.map(e=>getComputedStyle(e).backgroundColor)).size}));assert.deepEqual(rendered,{count:100,colours:10});
+      await page.locator('.cell').nth(0).click();const before=await state(page,'extreme');assert.equal(before.puzzle.n,10);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+2));await page.screenshot({path:'preview-extreme-mobile.png',fullPage:true});
+      await page.reload();assert.deepEqual((await state(page,'extreme')).cells,before.cells);assert.deepEqual((await state(page,'extreme')).puzzle,before.puzzle);
+      await page.locator('#btnUndo').click();assert.equal(await page.locator('.dino').count(),0);await page.locator('#btnRegions').click();assert.equal(await page.locator('#regionButtons button').count(),10);
+    });
+    await run('friends previews and variety preference preserve puzzle',async page=>{
+      await page.locator('#btnCharacter').click();const s=await state(page);const i=s.puzzle.region.findIndex(g=>(g+s.seed%4)%4!==0);await page.locator('.cell').nth(i).click();assert.equal(await page.locator('.friend-accessory').count(),1);const before=await state(page);
+      await page.locator('#btnSettings').click();assert.equal(await page.locator('#friendPreview use[href="#ko-explorer"]').count(),1);await page.locator('[data-look="explorer"]').click();assert.match(await page.locator('#friendGreeting').innerText(),/Ko:/);
+      await page.locator('[data-setting="variety"]').click();await page.locator('#btnSettingsClose').click();assert.equal(await page.locator('.friend-accessory').count(),0);assert.deepEqual((await state(page)).cells,before.cells);await page.reload();assert.equal(await page.locator('.friend-accessory').count(),0);
+    });
+    await run('collection rewards persist without counting a solved reload again',async page=>{
+      await page.locator('.cell').nth(6*7+p.sol[6]).click();await tick(page,1500);assert.equal((await state(page)).solved,true);await page.locator('#winModal.open').waitFor();assert.match(await page.locator('#winCollection').textContent(),/First home/);
+      await page.reload();await page.locator('#btnSettings').click();assert.equal(await page.locator('.sticker.earned').count(),1);await page.locator('#collectionProgress').scrollIntoViewIfNeeded();await tick(page,250);assert.match(await page.locator('#collectionProgress').innerText(),/^1 solved/);await page.screenshot({path:'preview-collection.png',fullPage:true});
+    },{'game.normal':almostSolved(p)});
+    await run('extreme completion credits its statistics and collection',async page=>{
+      const saved=await state(page,'extreme');await page.locator('.cell').nth(90+saved.puzzle.sol[9]).click();await tick(page,1500);await page.locator('#winModal.open').waitFor();
+      assert.equal((await state(page,'extreme')).solved,true);assert.equal(await page.locator('.dino use[href="#yo-happy"]').count(),10);
+      const stats=await page.evaluate(()=>JSON.parse(localStorage.getItem('yodoku.stats')));assert.equal(stats.extreme.solved,1);assert.match(await page.locator('#winCollection').textContent(),/First home/);
+    },{mode:'extreme','game.extreme':almostSolved(Y.generate({difficulty:'extreme',seed:7}))});
     console.log(JSON.stringify({passed,failures},null,2)); if(failures.length)process.exitCode=1;
   } finally { await browser.close(); server.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});

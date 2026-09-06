@@ -56,6 +56,13 @@
     </g>
     <symbol id="pig" viewBox="0 0 100 100"><use href="#pig-body"/><g class="mascot-eyes" fill="#674756"><ellipse cx="32" cy="33" rx="3" ry="4"/><ellipse cx="68" cy="33" rx="3" ry="4"/><circle cx="33" cy="31.5" r="1" fill="white"/><circle cx="69" cy="31.5" r="1" fill="white"/></g><path d="M45 60q5 5 10 0" fill="none" stroke="#885568" stroke-width="2" stroke-linecap="round"/></symbol>
     <symbol id="pig-head" viewBox="0 0 100 100"><use href="#pig"/></symbol>
+    <symbol id="friend-bow" viewBox="0 0 100 100"><path d="M50 70q-18-14-14 3-4 14 14 0 18 14 14-3 4-14-14 0Z" fill="#D96592" stroke="#864663" stroke-width="1.5"/><circle cx="50" cy="71" r="3.5" fill="#FFD6E3"/></symbol>
+    <symbol id="friend-explorer" viewBox="0 0 100 100"><path d="M29 18l5-12q16-8 32 0l5 12" fill="#DFBF7D" stroke="#866B44" stroke-width="2"/><path d="M32 12h36v6H32Z" fill="#91AC86"/><ellipse cx="50" cy="19" rx="28" ry="4" fill="#DFBF7D" stroke="#866B44" stroke-width="2"/></symbol>
+    <symbol id="friend-cozy" viewBox="0 0 100 100"><path d="M30 65q20 10 40 0l-2 8q-18 10-36 0Z" fill="#87B8C1" stroke="#527B8A" stroke-width="1.5"/><path d="M61 71l-2 16 9-1-1-16" fill="#87B8C1" stroke="#527B8A" stroke-width="1.5"/><path d="M61 82h6" stroke="#E0F1E8" stroke-width="2"/></symbol>
+    <symbol id="yo-bow" viewBox="0 0 100 100"><use href="#yo"/><use href="#friend-bow"/></symbol><symbol id="yo-explorer" viewBox="0 0 100 100"><use href="#yo"/><use href="#friend-explorer"/></symbol><symbol id="yo-cozy" viewBox="0 0 100 100"><use href="#yo"/><use href="#friend-cozy"/></symbol>
+    <symbol id="ko-bow" viewBox="0 0 100 100"><use href="#ko"/><use href="#friend-bow"/></symbol><symbol id="ko-explorer" viewBox="0 0 100 100"><use href="#ko"/><use href="#friend-explorer"/></symbol><symbol id="ko-cozy" viewBox="0 0 100 100"><use href="#ko"/><use href="#friend-cozy"/></symbol>
+    <symbol id="pig-bow" viewBox="0 0 100 100"><use href="#pig"/><use href="#friend-bow"/></symbol><symbol id="pig-explorer" viewBox="0 0 100 100"><use href="#pig"/><use href="#friend-explorer"/></symbol><symbol id="pig-cozy" viewBox="0 0 100 100"><use href="#pig"/><use href="#friend-cozy"/></symbol>
+    <symbol id="sloth-bow" viewBox="0 0 100 100"><use href="#sloth"/><use href="#friend-bow"/></symbol><symbol id="sloth-explorer" viewBox="0 0 100 100"><use href="#sloth"/><use href="#friend-explorer"/></symbol><symbol id="sloth-cozy" viewBox="0 0 100 100"><use href="#sloth"/><use href="#friend-cozy"/></symbol>
     <g id="sloth-body" stroke="#6D584A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <ellipse cx="50" cy="72" rx="25" ry="24" fill="#B59A7D"/>
       <ellipse cx="50" cy="75" rx="17" ry="16" fill="#E8D6B8" stroke="none"/>

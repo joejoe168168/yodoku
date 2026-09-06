@@ -27,11 +27,14 @@ On iPhone: open the page in Safari → Share → **Add to Home Screen**. It laun
 respects the notch/home-bar safe areas, and works offline after the first visit.
 
 ## Features
+- **Extreme 10×10** adds a larger challenge with ten distinct, connected colour regions and one logic-solvable solution. It has its own saved progress, undo history and statistics. Daily keeps its existing schedule.
+- **Varied friends** adds bow ties, explorer hats and cosy scarves to all four themes. Looks stay consistent by region and never indicate whether a move is correct. Toggle them in Settings; tap the character previews for a greeting and sound.
+- **Your cosy collection** awards permanent milestones at 1, 5, 15 and 30 puzzles solved across any mode. Hints are welcome; there are no deadlines. See collection progress in Settings and after each win.
 - Compact phone layout keeps the board nearly full width, hides the welcome banner during play, and uses one-row controls. On small landscape screens the controls sit beside the board. Idle feedback collapses; mistakes and hints expand when needed.
 - Tap **7 colours** (or the current board's colour count) to inspect every region, including tiny one-square regions. Select a numbered colour to highlight its squares. One-square regions are valid puzzle clues.
 - Generated and saved boards are checked for exactly N connected regions and a valid solution. Invalid saved boards are backed up under `yodoku.recovery.<mode>` in local storage before a fresh puzzle is loaded.
 - Endless generated puzzles at **Easy 6×6 · Normal 7×7 · Hard 8×8 · Ultra 9×9**, each with exactly one
-  solution and solvable by pure logic (no guessing).
+  solution and solvable by pure logic (no guessing), plus **Extreme 10×10**.
 - **Daily** puzzle — same board for everyone each day, with streaks.
 - **Cycle**, **Dino**, and **X mark** tools; drag to paint or erase X notes. **Auto X starts off**, with a visible toggle beside the board. Turning it off removes automatic notes and preserves manual notes.
 - Redrawn SVG dinosaur with normal, happy, and surprised expressions; matching home-screen icons, a garden palette, and responsive desktop/mobile layouts.
@@ -47,6 +50,8 @@ respects the notch/home-bar safe areas, and works offline after the first visit.
 - Progress, the exact puzzle layout, and undo history are saved per mode in `localStorage`, so you can switch tabs or reload and come back. The timer pauses in Help/Settings and while the page is hidden. Reduced-motion preferences disable confetti and board transitions.
 
 ## Browser checks
+
+Run `node qa-extreme.cjs` for 250 Extreme boards covering ten connected regions, unique solutions, logic solvability, completion, deterministic generation and rejection of missing regions.
 
 The detailed feature audit, confirmed fixes, coverage and limitations are in [AUDIT.md](AUDIT.md). Additional regression commands are `node qa-engine-audit.cjs`, `node qa-gameplay-audit.cjs`, and `node qa-offline-audit.cjs`.
 

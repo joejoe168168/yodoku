@@ -299,13 +299,14 @@
     easy:   { n: 6, min: 0,  max: 7,  label: 'Easy' },
     normal: { n: 7, min: 4,  max: 16, label: 'Normal' },
     hard:   { n: 8, min: 12, max: 40, label: 'Hard' },
-    ultra:  { n: 9, min: 22, max: 95, label: 'Ultra' }
+    ultra:  { n: 9, min: 22, max: 95, label: 'Ultra' },
+    extreme:{ n: 10, min: 30, max: 130, label: 'Extreme' }
   };
 
   function generate(opts) {
     const diff = DIFFS[opts.difficulty] || DIFFS.normal;
     const n = opts.size || diff.n;
-    if (!Number.isInteger(n) || n < 4 || n > 9) throw new RangeError('Puzzle size must be between 4 and 9');
+    if (!Number.isInteger(n) || n < 4 || n > 10) throw new RangeError('Puzzle size must be between 4 and 10');
     const r = rng(opts.seed >>> 0);
     // A fixed candidate budget keeps Daily and seed-based restores identical on
     // fast desktops and slow phones. Elapsed wall time must not pick the board.
@@ -339,7 +340,7 @@
   function validatePuzzle(puzzle) {
     if (!puzzle) return false;
     const { n, region, sol } = puzzle;
-    if (!Number.isInteger(n) || n < 4 || n > 9 || !Array.isArray(region) || region.length !== n * n || !Array.isArray(sol) || sol.length !== n) return false;
+    if (!Number.isInteger(n) || n < 4 || n > 10 || !Array.isArray(region) || region.length !== n * n || !Array.isArray(sol) || sol.length !== n) return false;
     if (region.some(g => !Number.isInteger(g) || g < 0 || g >= n) || new Set(region).size !== n) return false;
     if (sol.some(c => !Number.isInteger(c) || c < 0 || c >= n) || new Set(sol).size !== n) return false;
     const homes = sol.map((c, row) => row * n + c);

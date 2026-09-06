@@ -5,8 +5,8 @@
   const $ = (s, el) => (el || document).querySelector(s);
   const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
 
-  const MODES = ['easy', 'normal', 'hard', 'ultra', 'daily'];
-  const EMOJI = ['🩷', '🟧', '🟨', '🟩', '🟦', '🟪', '🩵', '⬜', '🟥'];
+  const MODES = ['easy', 'normal', 'hard', 'ultra', 'extreme', 'daily'];
+  const EMOJI = ['🩷', '🟧', '🟨', '🟩', '🟦', '🟪', '🩵', '⬜', '🟥', '🟫'];
   const LS = {
     get(k, d) { try { const v = localStorage.getItem('yodoku.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('yodoku.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } },
@@ -20,6 +20,7 @@
   CHARACTERS.sloth = { title: 'Sludoko', name: 'Snoo', prefix: 'Slu', symbol: 'sloth', animal: 'sloth', emoji: '🦥' };
   const nextCharacter = () => { const keys = Object.keys(CHARACTERS); return keys[(keys.indexOf(settings.character) + 1) % keys.length]; };
   const character = () => CHARACTERS[settings.character];
+  if (settings.variety === undefined) settings.variety = true;
   const mascot = (face = '') => '#' + character().symbol + (face ? '-' + face : '');
   function characterText(text) {
     return text.replace(/\b(?:dinos|koalas|pigs|sloths|dino|koala|pig|sloth)\b/gi, word => {
@@ -152,7 +153,7 @@
   function makeGame(puzzle, extra) {
     const N = puzzle.n * puzzle.n;
     const r = Y.rng(puzzle.seed ^ 0x9E3779B9);
-    const colors = Array.from({ length: puzzle.n }, (_, i) => i % 9);
+    const colors = Array.from({ length: puzzle.n }, (_, i) => i);
     for (let i = colors.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [colors[i], colors[j]] = [colors[j], colors[i]]; }
     return Object.assign({
       puzzle, cells: new Array(N).fill(0), autoOwner: new Array(N).fill(-1), history: [],
@@ -256,7 +257,7 @@
       el.tabIndex = i === 0 ? 0 : -1;
       el.style.background = `var(--c${game.colors[region[i]]})`;
       el.dataset.region = region[i] + 1;
-      const angles = [0, 45, 90, 135, 30, 60, 120, 150, 15];
+      const angles = [0, 45, 90, 135, 30, 60, 120, 150, 15, 75];
       el.style.setProperty('--pattern', region[i] % 3 === 0 ? 'radial-gradient(circle, #28584130 1px, transparent 1.5px)' : `repeating-linear-gradient(${angles[region[i]]}deg,transparent 0 7px,#28584120 7px 8px,transparent 8px 12px)`);
       frag.appendChild(el); cellEls.push(el);
     }
@@ -284,7 +285,10 @@
     el.setAttribute('aria-label', `Row ${Math.floor(i / game.puzzle.n) + 1}, column ${i % game.puzzle.n + 1}, region ${game.puzzle.region[i] + 1}: ${v === 0 ? 'empty' : v === 1 ? 'crossed out' : character().animal}`);
     if (v === 0) el.innerHTML = '';
     else if (v === 1) el.innerHTML = `<div class="x${animate ? ' pop' : ''}"><svg><use href="#xmark"/></svg></div>`;
-    else el.innerHTML = `<div class="dino${animate ? ' pop' : ''}"><svg><use href="${mascot()}"/></svg></div>`;
+    else {
+      const look = ['', 'bow', 'explorer', 'cozy'][(game.puzzle.region[i] + game.seed % 4) % 4];
+      el.innerHTML = `<div class="dino${animate ? ' pop' : ''}"><svg><use href="${mascot()}"/>${settings.variety && look ? `<use class="friend-accessory" href="#friend-${look}"/>` : ''}</svg></div>`;
+    }
   }
 
   function renderErrors() {
@@ -642,6 +646,7 @@
     if (mode === 'daily' && currentStreak() > 1) sub += ` 🔥 ${currentStreak()}-day streak!`;
     $('#winSub').textContent = sub;
     $('#winGrid').textContent = emojiGrid();
+    renderCollection();
     $('#btnWinNext').innerHTML = mode === 'daily' ? `<svg width="22" height="22"><use href="#i-next"/></svg>${game.dateStr !== today() ? 'Today’s puzzle' : 'Play more'}` : '<svg width="22" height="22"><use href="#i-next"/></svg>Next puzzle';
     openModal('#winModal');
     translateCharacter($('#winModal'));
@@ -746,7 +751,16 @@
     $('#practiceBoard').children[practiceTargets()[0]].focus();
   });
   $('#btnTutorialClose').addEventListener('click', () => { closeModal('#tutorialModal'); $('#btnHelp').focus(); });
-  $('#btnSettings').addEventListener('click', () => { renderStats(); openModal('#settingsModal'); });
+  const MILESTONES = [{ at:1, icon:'🌱', name:'First home' }, { at:5, icon:'🌼', name:'Little garden' }, { at:15, icon:'🌳', name:'Cosy grove' }, { at:30, icon:'🌈', name:'Happy haven' }];
+  function renderCollection() {
+    const total = MODES.reduce((sum,m) => sum + stats[m].solved, 0), next = MILESTONES.find(m => total < m.at);
+    $('#stickerBook').innerHTML = MILESTONES.map(m => `<div class="sticker${total >= m.at ? ' earned' : ''}" aria-label="${m.name}: ${total >= m.at ? 'earned' : `solve ${m.at} puzzles`}"><b aria-hidden="true">${m.icon}</b>${m.name}<br>${m.at} puzzle${m.at === 1 ? '' : 's'}</div>`).join('');
+    const message = next ? `${total} solved · ${next.at - total} more for ${next.name}. Any mode, at your own pace.` : `${total} solved · Your cosy collection is complete!`;
+    $('#collectionProgress').textContent = message;
+    const earned = MILESTONES.find(m => total === m.at);
+    $('#winCollection').textContent = earned ? `${earned.icon} ${earned.name} added to your collection!` : message;
+  }
+  $('#btnSettings').addEventListener('click', () => { renderStats(); renderCollection(); openModal('#settingsModal'); });
   $('#btnSettingsClose').addEventListener('click', () => closeModal('#settingsModal'));
   function renderCharacter() {
     const skin = character(); document.body.dataset.character = settings.character;
@@ -757,6 +771,7 @@
     $('#btnCharacter').setAttribute('aria-label', `Switch to ${next.title}, the ${next.animal} theme`);
     $('link[rel="icon"]').setAttribute('href', settings.character === 'dino' ? 'icons/icon.svg' : `assets/${skin.symbol}-icon.svg`);
     for (const button of $$('.character-choice')) button.setAttribute('aria-pressed', String(button.dataset.character === settings.character));
+    for (const button of $$('#friendPreview button')) $('use', button).setAttribute('href', mascot(button.dataset.look));
     for (const use of $$('use')) {
       if (use.closest('defs,.character-choices')) continue;
       const match = /^(?:#yo|#ko|#pig|#sloth)(-happy|-oops|-head)?$/.exec(use.getAttribute('href') || '');
@@ -776,6 +791,11 @@
   $('#btnCharacter').addEventListener('click', () => selectCharacter(nextCharacter()));
   for (const button of $$('.character-choice')) button.addEventListener('click', () => selectCharacter(button.dataset.character));
   $('#btnSoundPreview').addEventListener('click', () => { if (settings.sound) sfx.place(); else toast('Turn on Sounds to hear your character.'); });
+  for (const button of $$('#friendPreview button')) button.addEventListener('click', () => {
+    const greetings = { bow: 'Dressed up for a little puzzle party!', explorer: 'Ready to discover another cosy home!', cozy: 'A warm scarf and a puzzle. Lovely.' };
+    $('#friendGreeting').textContent = `${character().name}: ${greetings[button.dataset.look]}`;
+    const svg = $('svg', button); svg.classList.remove('mascot-greeting'); void svg.offsetWidth; svg.classList.add('mascot-greeting'); sfx.place(); buzz(8);
+  });
   $('#btnShare').addEventListener('click', share);
   $('#btnWinNext').addEventListener('click', () => { closeModal('#winModal'); if (mode === 'daily') switchMode(game.dateStr !== today() ? 'daily' : stats.normal.solved > 3 ? 'hard' : 'normal'); else startNew(); });
   for (const sw of $$('.switch')) {
@@ -786,6 +806,7 @@
       settings[k] = !settings[k]; sw.setAttribute('aria-checked', settings[k] ? 'true' : 'false'); saveSettings();
       if ((k === 'showErrors' || k === 'checkSolution') && game) { renderErrors(); renderLabels(); }
       if (k === 'patterns') board.classList.toggle('patterns', settings.patterns);
+      if (k === 'variety') renderCharacter();
       if (k === 'showTimer') renderTimer();
       buzz(6);
     });

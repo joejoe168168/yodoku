@@ -205,6 +205,7 @@ body[data-character="pig"]{--green-dark:#885568;--green:#C58699;--bg2:#F7E5E9;ba
 .character-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.character-choice{flex-direction:column;text-align:center;padding:8px 4px;gap:3px}.character-choice small{font-size:11px}
 body[data-character="sloth"]{--green-dark:#655A43;--green:#A69A76;--bg2:#EEEBDD;background-color:#FAF8F0;background-image:radial-gradient(ellipse at 0% 0%,#E5EAD8 0,transparent 45%),radial-gradient(ellipse at 100% 100%,#F0DDC3 0,transparent 45%)}body[data-character="sloth"] .logo .brand-name{color:#655A43}body[data-character="sloth"] .logo .brand-name .brand-suffix{color:#AD805E}body[data-character="sloth"] .ctl.primary,body[data-character="sloth"] .big:not(.ghost),body[data-character="sloth"] .tool[aria-pressed="true"]{background:#655A43}body[data-character="sloth"] .character-choice[aria-pressed="true"]{background:#F2EFDF}
 @media(max-width:380px){.logo .brand-name{font-size:25px}.character-choice{padding:8px 4px;gap:5px}.character-choice svg{width:42px;height:42px}}
+:root{--c9:#C5A987}.tabs .tab{min-width:0}.friend-preview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.friend-preview button{border-radius:16px;background:var(--bg2);padding:6px;min-height:86px;font-size:12px}.friend-preview svg{display:block;width:64px;height:64px;margin:auto}.sticker-book{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.sticker{border:2px dashed #D9DECE;border-radius:14px;text-align:center;padding:8px 3px;font-size:11px;opacity:.55}.sticker.earned{border-style:solid;border-color:var(--green);opacity:1;background:var(--bg2)}.sticker b{display:block;font-size:24px}.friend-accessory{pointer-events:none}@media(max-width:600px){.tabs{gap:1px}.tabs .tab{font-size:11px}.tabs .tab .dot{position:absolute;right:4px;top:5px}}
 </style>
 </head>
 <body>
@@ -269,6 +270,13 @@ body[data-character="sloth"]{--green-dark:#655A43;--green:#A69A76;--bg2:#EEEBDD;
     </g>
     <symbol id="pig" viewBox="0 0 100 100"><use href="#pig-body"/><g class="mascot-eyes" fill="#674756"><ellipse cx="32" cy="33" rx="3" ry="4"/><ellipse cx="68" cy="33" rx="3" ry="4"/><circle cx="33" cy="31.5" r="1" fill="white"/><circle cx="69" cy="31.5" r="1" fill="white"/></g><path d="M45 60q5 5 10 0" fill="none" stroke="#885568" stroke-width="2" stroke-linecap="round"/></symbol>
     <symbol id="pig-head" viewBox="0 0 100 100"><use href="#pig"/></symbol>
+    <symbol id="friend-bow" viewBox="0 0 100 100"><path d="M50 70q-18-14-14 3-4 14 14 0 18 14 14-3 4-14-14 0Z" fill="#D96592" stroke="#864663" stroke-width="1.5"/><circle cx="50" cy="71" r="3.5" fill="#FFD6E3"/></symbol>
+    <symbol id="friend-explorer" viewBox="0 0 100 100"><path d="M29 18l5-12q16-8 32 0l5 12" fill="#DFBF7D" stroke="#866B44" stroke-width="2"/><path d="M32 12h36v6H32Z" fill="#91AC86"/><ellipse cx="50" cy="19" rx="28" ry="4" fill="#DFBF7D" stroke="#866B44" stroke-width="2"/></symbol>
+    <symbol id="friend-cozy" viewBox="0 0 100 100"><path d="M30 65q20 10 40 0l-2 8q-18 10-36 0Z" fill="#87B8C1" stroke="#527B8A" stroke-width="1.5"/><path d="M61 71l-2 16 9-1-1-16" fill="#87B8C1" stroke="#527B8A" stroke-width="1.5"/><path d="M61 82h6" stroke="#E0F1E8" stroke-width="2"/></symbol>
+    <symbol id="yo-bow" viewBox="0 0 100 100"><use href="#yo"/><use href="#friend-bow"/></symbol><symbol id="yo-explorer" viewBox="0 0 100 100"><use href="#yo"/><use href="#friend-explorer"/></symbol><symbol id="yo-cozy" viewBox="0 0 100 100"><use href="#yo"/><use href="#friend-cozy"/></symbol>
+    <symbol id="ko-bow" viewBox="0 0 100 100"><use href="#ko"/><use href="#friend-bow"/></symbol><symbol id="ko-explorer" viewBox="0 0 100 100"><use href="#ko"/><use href="#friend-explorer"/></symbol><symbol id="ko-cozy" viewBox="0 0 100 100"><use href="#ko"/><use href="#friend-cozy"/></symbol>
+    <symbol id="pig-bow" viewBox="0 0 100 100"><use href="#pig"/><use href="#friend-bow"/></symbol><symbol id="pig-explorer" viewBox="0 0 100 100"><use href="#pig"/><use href="#friend-explorer"/></symbol><symbol id="pig-cozy" viewBox="0 0 100 100"><use href="#pig"/><use href="#friend-cozy"/></symbol>
+    <symbol id="sloth-bow" viewBox="0 0 100 100"><use href="#sloth"/><use href="#friend-bow"/></symbol><symbol id="sloth-explorer" viewBox="0 0 100 100"><use href="#sloth"/><use href="#friend-explorer"/></symbol><symbol id="sloth-cozy" viewBox="0 0 100 100"><use href="#sloth"/><use href="#friend-cozy"/></symbol>
     <g id="sloth-body" stroke="#6D584A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <ellipse cx="50" cy="72" rx="25" ry="24" fill="#B59A7D"/>
       <ellipse cx="50" cy="75" rx="17" ry="16" fill="#E8D6B8" stroke="none"/>
@@ -326,6 +334,7 @@ body[data-character="sloth"]{--green-dark:#655A43;--green:#A69A76;--bg2:#EEEBDD;
   <button class="tab" role="tab" data-mode="normal">Normal<i class="dot"></i></button>
   <button class="tab" role="tab" data-mode="hard">Hard<i class="dot"></i></button>
   <button class="tab" role="tab" data-mode="ultra">Ultra<i class="dot"></i></button>
+  <button class="tab" role="tab" data-mode="extreme">Extreme<i class="dot"></i></button>
   <button class="tab" role="tab" data-mode="daily">Daily<i class="dot"></i></button>
 </nav>
 
@@ -382,6 +391,10 @@ body[data-character="sloth"]{--green-dark:#655A43;--green:#A69A76;--bg2:#EEEBDD;
     <h2 id="settingsTitle">Settings</h2>
     <div class="character-choices" role="group" aria-label="Choose your character"><button class="character-choice" data-character="dino" aria-pressed="true"><svg aria-hidden="true"><use href="#yo-happy"/></svg><span>Yodoku<small>Yo the dino</small></span></button><button class="character-choice" data-character="koala" aria-pressed="false"><svg aria-hidden="true"><use href="#ko-happy"/></svg><span>Kodoku<small>Ko the koala</small></span></button><button class="character-choice" data-character="pig" aria-pressed="false"><svg aria-hidden="true"><use href="#pig-happy"/></svg><span>Pigdoku<small>Pip the pig</small></span></button><button class="character-choice" data-character="sloth" aria-pressed="false"><svg aria-hidden="true"><use href="#sloth-happy"/></svg><span>Sludoko<small>Snoo the sloth</small></span></button></div>
     <p class="skin-note">Same puzzle, a different little friend. Your progress stays.</p>
+    <div class="friend-preview" id="friendPreview" role="group" aria-label="Meet your friends"><button data-look="bow" aria-label="Greet the bow friend"><svg><use/></svg><span>Bow</span></button><button data-look="explorer" aria-label="Greet the explorer friend"><svg><use/></svg><span>Explorer</span></button><button data-look="cozy" aria-label="Greet the cosy friend"><svg><use/></svg><span>Cosy</span></button></div>
+    <p class="skin-note" id="friendGreeting" role="status">Tap a friend to say hello.</p>
+    <div class="setting"><div><b>Varied friends</b><small>Bow ties, explorer hats and cosy scarves on the board.</small></div><button class="switch" role="switch" data-setting="variety" aria-checked="true"></button></div>
+    <h2 style="font-size:18px">Your cosy collection</h2><div class="sticker-book" id="stickerBook"></div><p class="skin-note" id="collectionProgress"></p>
     <p class="skin-note"><a href="assets/index.html" target="_blank" rel="noopener">Open the character &amp; sound gallery ↗</a></p>
     <div class="setting"><div><b>Auto X</b><small>Placing a dino marks its row, column, colour and neighbours.</small></div><button class="switch" role="switch" data-setting="autoX" aria-checked="false"></button></div>
     <div class="setting"><div><b>Show mistakes</b><small>Highlight dinos that break a rule.</small></div><button class="switch" role="switch" data-setting="showErrors" aria-checked="true"></button></div>
@@ -411,6 +424,7 @@ body[data-character="sloth"]{--green-dark:#655A43;--green:#A69A76;--bg2:#EEEBDD;
       <div class="stat"><b id="winBest">—</b><span>Best</span></div>
       <div class="stat"><b id="winHints">0</b><span>Hints</span></div>
     </div>
+    <p class="skin-note" id="winCollection" role="status"></p>
     <div class="emoji-grid" id="winGrid"></div>
     <div class="row2">
       <button class="big ghost" id="btnShare"><svg width="22" height="22"><use href="#i-share"/></svg>Share</button>

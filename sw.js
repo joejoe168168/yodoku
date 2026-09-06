@@ -1,5 +1,5 @@
 /* Yodoku service worker — offline-first app shell */
-const CACHE = 'yodoku-v8';
+const CACHE = 'yodoku-v9';
 const SHELL = ['./', './index.html', './app.js', './engine.js', './manifest.json', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './assets/ko-icon.svg', './assets/pig-icon.svg', './assets/sloth-icon.svg', ...['yo','ko','pig','sloth'].flatMap(character => ['x','clear','place','error','hint','win'].map(event => `./assets/sounds/${character}-${event}.wav`))];
 
 self.addEventListener('install', e => {
