@@ -27,6 +27,8 @@ On iPhone: open the page in Safari → Share → **Add to Home Screen**. It laun
 respects the notch/home-bar safe areas, and works offline after the first visit.
 
 ## Features
+- Settings puts gameplay controls before character extras, with a close button that stays visible while scrolling. Sound has a saved 0–100% volume control (70% default), and muting silences currently playing effects. Changing volume never turns sound back on.
+- Theme accents carry through the board, headings and active difficulty, and each character has its own win messages. Reduced motion also limits repeated animations.
 - **Extreme 10×10** adds a larger challenge with ten distinct, connected colour regions and one logic-solvable solution. It has its own saved progress, undo history and statistics. Daily keeps its existing schedule.
 - **Varied friends** adds bow ties, explorer hats and cosy scarves to all four themes. Looks stay consistent by region and never indicate whether a move is correct. Toggle them in Settings; tap the character previews for a greeting and sound.
 - **Your cosy collection** awards permanent milestones at 1, 5, 15 and 30 puzzles solved across any mode. Hints are welcome; there are no deadlines. See collection progress in Settings and after each win.

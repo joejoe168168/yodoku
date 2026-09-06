@@ -22,7 +22,7 @@ The checked puzzle rules and hint deductions are consistent. The audit also repr
 
 - `node qa-regions.cjs`: 1,000 generated boards across Easy, Normal, Hard and Ultra; exactly N connected regions, valid solution placements, uniqueness, and rejection of malformed puzzle data.
 - `node qa-engine-audit.cjs`: 400 boards completed through 4,762 successive hint steps. Every suggested placement/elimination was checked against the unique solution. Coverage was checked with an independent pairwise rule oracle, and 40 boards also had their solution counts independently enumerated. Tests cover singles, confined regions, region sets, lookahead, wrong dinos, incorrect X notes, and device-speed independence.
-- `node qa-gameplay-audit.cjs`: 33 focused browser scenarios covering timer resume/pause, clock changes, drag input, Auto X ownership/history/mode switches, confirmation scope, save recovery, Daily dates/streaks/duplicate results, keyboard controls, share/clipboard/cancel behavior, storage failure, offline reload, and sound/haptic settings.
+- `node qa-gameplay-audit.cjs`: 34 focused browser scenarios covering timer resume/pause, clock changes, drag input, Auto X ownership/history/mode switches, confirmation scope, save recovery, Daily dates/streaks/duplicate results, keyboard controls, share/clipboard/cancel behavior, storage failure, offline reload, and sound/haptic settings.
 - `node qa-offline-audit.cjs`: cache installation, release consistency, and preservation of unrelated caches and requests.
 - `node qa.cjs`: existing desktop and compact-phone checks, touch emulation, direct tools, note preservation, undo, region inspection, patterns, graduated hints, tutorial isolation, mistake feedback, full invalid boards, solution checking, completion, and reduced motion.
 
@@ -35,6 +35,10 @@ The 24 browser scenarios also verify switching Yodoku/Kodoku without losing the 
 `node qa-extreme.cjs` passes 250 10×10 boards: exactly ten connected regions, unique solutions, logic solvability, valid completion, deterministic generation and missing-region rejection. The slowest generation in this desktop run was 343 ms; physical phone speeds may differ. The existing 29 gameplay scenarios and desktop/phone smoke suite pass after the update. Four additional scenarios cover Extreme rendering/save/undo/completion, companion previews and the variety setting, and permanent collection progress across reloads. Offline release checks also pass. Extreme is separate from the unchanged Daily schedule.
 
 Each theme includes bow, explorer and cosy variants. These are assigned by region and seed, not by solution correctness. Collection milestones derive from the existing persisted solve statistics and never depend on hints or maintaining a daily streak.
+
+## Final visual and audio polish
+
+Desktop/phone smoke checks, offline release checks, the sound/haptic regression and a new master-volume regression pass. The volume test verifies actual Web Audio gain values, immediate mute, persistence and that changing volume does not unmute. Settings now prioritizes gameplay controls and keeps a close button visible while scrolling. The new range input participates in dialog keyboard focus. Theme-specific win messages and board accents replace leftover dinosaur styling. Physical speaker/headphone listening remains outside browser automation.
 
 ## Scope and limitations
 

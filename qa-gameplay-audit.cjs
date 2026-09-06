@@ -220,6 +220,15 @@ const Y = require('./engine');
       assert.equal((await state(page,'extreme')).solved,true);assert.equal(await page.locator('.dino use[href="#yo-happy"]').count(),10);
       const stats=await page.evaluate(()=>JSON.parse(localStorage.getItem('yodoku.stats')));assert.equal(stats.extreme.solved,1);assert.match(await page.locator('#winCollection').textContent(),/First home/);
     },{mode:'extreme','game.extreme':almostSolved(Y.generate({difficulty:'extreme',seed:7}))});
+    await run('volume controls audio gain and persists without unmuting',async page=>{
+      await page.evaluate(()=>{window.audioGains=[];const Original=window.AudioContext;window.AudioContext=class extends Original{createGain(){const gain=super.createGain();window.audioGains.push(gain);return gain;}};});
+      await page.locator('#btnSettings').click();await page.locator('[data-setting="sound"]').click();await page.locator('#btnSoundPreview').click();
+      await page.locator('#soundVolume').evaluate(el=>{el.value='25';el.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(await page.evaluate(()=>window.audioGains[0].gain.value),.25);
+      await page.locator('[data-setting="sound"]').click();assert.equal(await page.evaluate(()=>window.audioGains[0].gain.value),0);
+      await page.locator('#soundVolume').evaluate(el=>{el.value='50';el.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(await page.evaluate(()=>window.audioGains[0].gain.value),0);
+      await page.locator('#btnSettingsTopClose').click();assert.equal(await page.locator('#settingsModal.open').count(),0);await page.reload();await page.locator('#btnSettings').click();assert.equal(await page.locator('#soundVolume').inputValue(),'50');assert.equal(await page.locator('[data-setting="sound"]').getAttribute('aria-checked'),'false');
+      await page.locator('#soundVolume').scrollIntoViewIfNeeded();await tick(page,250);await page.screenshot({path:'preview-settings-audio.png',fullPage:true});
+    });
     console.log(JSON.stringify({passed,failures},null,2)); if(failures.length)process.exitCode=1;
   } finally { await browser.close(); server.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});

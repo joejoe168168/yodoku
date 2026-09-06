@@ -71,11 +71,18 @@
   }
 
   // ---------- audio & haptics ----------
-  let actx = null;
+  let actx = null, masterGain = null;
+  settings.volume = Number.isFinite(settings.volume) ? Math.max(0, Math.min(1, settings.volume)) : .7;
+  function updateVolume() {
+    if (masterGain) masterGain.gain.value = settings.sound ? settings.volume : 0;
+    $('#volumeValue').textContent = Math.round(settings.volume * 100) + '%';
+    $('#soundVolume').value = Math.round(settings.volume * 100);
+  }
   const soundBuffers = new Map(), pendingSounds = new Set();
   let lastNoteSound = 0;
   function audioContext() {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (!masterGain) { masterGain = actx.createGain(); masterGain.connect(actx.destination); updateVolume(); }
     if (actx.state === 'suspended') actx.resume().catch(() => {});
     return actx;
   }
@@ -91,14 +98,14 @@
     }
   }
   function playSound(event, fallback) {
-    if (!settings.sound) return;
+    if (!settings.sound || settings.volume === 0) return;
     if (['x', 'clear'].includes(event)) { const now = performance.now(); if (lastNoteSound && now - lastNoteSound < 45) return; lastNoteSound = now; }
     try {
       const context = audioContext(), buffer = soundBuffers.get(`${character().symbol}-${event}`);
       loadCharacterSounds();
       if (buffer) {
         const source = context.createBufferSource(), gain = context.createGain();
-        source.buffer = buffer; gain.gain.value = .65; source.connect(gain); gain.connect(context.destination); source.start();
+        source.buffer = buffer; gain.gain.value = .65; source.connect(gain); gain.connect(masterGain); source.start();
         source.onended = () => { source.disconnect(); gain.disconnect(); };
         return;
       }
@@ -106,7 +113,7 @@
     fallback();
   }
   function tone(freq, dur, type, vol, when) {
-    if (!settings.sound) return;
+    if (!settings.sound || settings.volume === 0) return;
     try {
       audioContext();
       if (settings.character === 'koala') freq *= .75;
@@ -116,7 +123,8 @@
       const o = actx.createOscillator(), g = actx.createGain();
       o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.12, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur + 0.02);
+      o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + dur + 0.02);
+      o.onended = () => { o.disconnect(); g.disconnect(); };
     } catch (e) { /* no audio */ }
   }
   const sfx = {
@@ -640,7 +648,12 @@
     $('#winTime').textContent = fmtTime(t);
     $('#winBest').textContent = stats[mode].best !== null ? fmtTime(stats[mode].best) : '—';
     $('#winHints').textContent = game.hints;
-    const subs = ['Every dino found a home.', 'Roar-some logic!', 'Not a single dino was squished.', 'Dino-mite solving!', 'Clean and cosy — no neighbours.'];
+    const subs = {
+      dino: ['Every dino found a home.', 'Roar-some logic!', 'A tiny victory, a mighty roar!'],
+      koala: ['Every koala found a cosy branch.', 'A eucalyptus break, well earned!', 'Koala-ty puzzling!'],
+      pig: ['Every pig found a happy home.', 'Oink, oink, hooray!', 'A little happy wiggle for you!'],
+      sloth: ['Every sloth found a peaceful perch.', 'Slow and steady, beautifully solved.', 'Time for a well-earned stretch.']
+    }[settings.character];
     let sub = subs[(game.seed >>> 3) % subs.length];
     if (isBest && stats[mode].solved > 1) sub = '🏆 New best time!';
     if (mode === 'daily' && currentStreak() > 1) sub += ` 🔥 ${currentStreak()}-day streak!`;
@@ -762,6 +775,7 @@
   }
   $('#btnSettings').addEventListener('click', () => { renderStats(); renderCollection(); openModal('#settingsModal'); });
   $('#btnSettingsClose').addEventListener('click', () => closeModal('#settingsModal'));
+  $('#btnSettingsTopClose').addEventListener('click', () => closeModal('#settingsModal'));
   function renderCharacter() {
     const skin = character(); document.body.dataset.character = settings.character;
     document.title = `${skin.title} — a cosy logic puzzle`;
@@ -791,6 +805,8 @@
   $('#btnCharacter').addEventListener('click', () => selectCharacter(nextCharacter()));
   for (const button of $$('.character-choice')) button.addEventListener('click', () => selectCharacter(button.dataset.character));
   $('#btnSoundPreview').addEventListener('click', () => { if (settings.sound) sfx.place(); else toast('Turn on Sounds to hear your character.'); });
+  $('#soundVolume').addEventListener('input', e => { settings.volume = Number(e.target.value) / 100; updateVolume(); saveSettings(); });
+  $('#soundVolume').addEventListener('change', () => { if (settings.sound && settings.volume > 0) sfx.place(); });
   for (const button of $$('#friendPreview button')) button.addEventListener('click', () => {
     const greetings = { bow: 'Dressed up for a little puzzle party!', explorer: 'Ready to discover another cosy home!', cozy: 'A warm scarf and a puzzle. Lovely.' };
     $('#friendGreeting').textContent = `${character().name}: ${greetings[button.dataset.look]}`;
@@ -804,6 +820,7 @@
     sw.addEventListener('click', () => {
       if (k === 'autoX') { toggleAutoX(); return; }
       settings[k] = !settings[k]; sw.setAttribute('aria-checked', settings[k] ? 'true' : 'false'); saveSettings();
+      if (k === 'sound') updateVolume();
       if ((k === 'showErrors' || k === 'checkSolution') && game) { renderErrors(); renderLabels(); }
       if (k === 'patterns') board.classList.toggle('patterns', settings.patterns);
       if (k === 'variety') renderCharacter();
@@ -889,7 +906,7 @@
     if (modal) {
       if (e.key === 'Escape') closeModal('#' + modal.id);
       if (e.key === 'Tab') {
-        const buttons = $$('button:not([disabled]),a[href]', modal), first = buttons[0], last = buttons[buttons.length - 1];
+        const buttons = $$('button:not([disabled]),a[href],input:not([disabled])', modal), first = buttons[0], last = buttons[buttons.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
@@ -919,6 +936,7 @@
   switchMode(mode);
   renderInput();
   renderCharacter();
+  updateVolume();
   if (!settings.seenHelp) setTimeout(() => openModal('#helpModal'), 400);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* offline support unavailable */ }));
