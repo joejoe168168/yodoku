@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 100 100"><defs>
+<g id="yo-body" stroke="#285841" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+ <ellipse cx="51" cy="94" rx="33" ry="4" fill="#285841" opacity=".12" stroke="none"/>
+ <path d="M66 71Q88 82 91 61Q100 83 74 86" fill="#78CE72"/>
+ <path d="M64 28l12-3-3 13 10 3-8 10 8 8-14 5" fill="#FF997D"/>
+ <path d="M39 57Q23 67 33 85Q51 96 70 81L68 55" fill="#78CE72"/>
+ <ellipse cx="49" cy="73" rx="14" ry="17" fill="#FFFBE4" stroke="none"/>
+ <path d="M33 83Q20 81 19 91Q20 96 41 94L44 87" fill="#EF9870"/>
+ <path d="M59 85Q65 80 73 86Q85 86 81 94H59Z" fill="#EF9870"/>
+ <path d="M21 91h19M61 91h18" stroke="#FFCE9E"/>
+ <path d="M65 62Q79 57 78 65Q76 72 68 74" fill="#78CE72"/>
+ <path d="M30 37Q27 14 40 12Q48 9 51 19Q57 6 65 12Q77 20 72 40L64 55H37Z" fill="#78CE72"/>
+ <ellipse cx="41" cy="29" rx="8" ry="13" fill="#FFFDF4" stroke="none"/>
+ <ellipse cx="60" cy="27" rx="8" ry="13" fill="#FFFDF4" stroke="none"/>
+</g>
+<symbol id="yo" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M37 57Q47 61 55 56" fill="none" stroke="#285841" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="yo-head" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M37 57Q47 61 55 56" fill="none" stroke="#285841" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="yo-happy" viewBox="0 0 100 100"><use href="#yo-body"/><path d="M37 29q5-8 10 0M55 27q5-8 10 0" stroke="#285841" stroke-width="3" fill="none" stroke-linecap="round"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M35 55Q46 72 56 55Z" fill="#864A4F"/><path d="M40 60q6-4 11 0" stroke="#F9ADAF" stroke-width="3"/><path d="M12 15v10M7 20h10M84 32v8M80 36h8" stroke="#E9AE39" stroke-width="3" stroke-linecap="round"/></symbol>
+<symbol id="yo-oops" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><ellipse cx="46" cy="57" rx="3" ry="4" fill="#864A4F"/><path d="M80 17q-9 13 0 13q8 0 0-13" fill="#8DCFEF"/></symbol>
+    <g id="ko-body" stroke="#485568" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="50" cy="94" rx="31" ry="4" fill="#485568" opacity=".12" stroke="none"/>
+      <ellipse cx="50" cy="73" rx="24" ry="22" fill="#A9B6C9"/>
+      <ellipse cx="50" cy="76" rx="15" ry="15" fill="#FFF8E9" stroke="none"/>
+      <ellipse cx="32" cy="89" rx="12" ry="7" fill="#8F9EB6"/><ellipse cx="68" cy="89" rx="12" ry="7" fill="#8F9EB6"/>
+      <path d="M28 89h7M65 89h7" stroke="#DADEEB"/>
+      <path d="M30 61Q18 60 20 71Q25 78 34 70" fill="#A9B6C9"/>
+      <path d="M68 61Q78 52 82 59Q85 66 72 72" fill="#A9B6C9"/>
+      <path d="M76 75Q82 61 85 45" stroke="#537C61"/>
+      <path d="M82 62Q68 57 75 49Q85 48 82 62M84 54Q83 39 93 41Q98 50 84 54" fill="#A9CF9C" stroke="#537C61" stroke-width="1.8"/>
+      <path d="M29 22Q17 9 7 21Q0 33 10 43Q18 48 29 40M71 22Q83 9 93 21Q100 33 90 43Q82 48 71 40" fill="#A9B6C9"/>
+      <ellipse cx="17" cy="30" rx="9" ry="11" fill="#E1C5D5" stroke="none"/><ellipse cx="83" cy="30" rx="9" ry="11" fill="#E1C5D5" stroke="none"/>
+      <path d="M18 39Q17 19 37 17L43 11L48 16L55 10L58 17Q83 18 82 41Q83 63 51 65Q19 65 18 39Z" fill="#BEC8D8"/>
+      <path d="M25 39Q23 55 39 59Q53 67 68 56Q77 48 72 40Q65 34 55 41Q49 43 44 40Q34 33 25 39" fill="#F9F5EE" stroke="none"/>
+      <ellipse cx="29" cy="48" rx="5" ry="3.3" fill="#EBAFBC" stroke="none"/><ellipse cx="71" cy="48" rx="5" ry="3.3" fill="#EBAFBC" stroke="none"/>
+      <path d="M43 38Q42 29 50 29Q59 29 57 39L55 48Q50 53 45 48Z" fill="#485568" stroke="none"/>
+      <ellipse cx="48" cy="35" rx="2" ry="3" fill="#7C8BA2" stroke="none"/>
+    </g>
+    <symbol id="ko" viewBox="0 0 100 100"><use href="#ko-body"/><g class="mascot-eyes" fill="#364559"><ellipse cx="33" cy="38" rx="3" ry="4"/><ellipse cx="67" cy="38" rx="3" ry="4"/><circle cx="34" cy="36.5" r="1" fill="white"/><circle cx="68" cy="36.5" r="1" fill="white"/></g><path d="M45 55Q50 60 55 55" fill="none" stroke="#485568" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ko-head" viewBox="0 0 100 100"><use href="#ko"/></symbol>
+    <symbol id="ko-happy" viewBox="0 0 100 100"><use href="#ko-body"/><path d="M29 39q4-7 8 0M63 39q4-7 8 0" fill="none" stroke="#485568" stroke-width="2.5" stroke-linecap="round"/><path d="M43 53Q50 68 57 53Z" fill="#8B596B"/><path d="M47 58q3-2 6 0" fill="none" stroke="#F1ABB9" stroke-width="3"/><path d="M9 56v8M5 60h8M90 10v8M86 14h8" stroke="#D5AB49" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="ko-oops" viewBox="0 0 100 100"><use href="#ko-body"/><circle cx="33" cy="38" r="4" fill="white"/><circle cx="67" cy="38" r="4" fill="white"/><circle cx="33" cy="39" r="2" fill="#364559"/><circle cx="67" cy="39" r="2" fill="#364559"/><ellipse cx="50" cy="56" rx="3" ry="4" fill="#8B596B"/><path d="M84 9q-6 10 0 10q6 0 0-10" fill="#88C9E7"/></symbol>
+    <symbol id="egg" viewBox="0 0 100 100">
+      <path d="M50 12 C 30 12, 22 40, 22 58 C 22 78, 34 90, 50 90 C 66 90, 78 78, 78 58 C 78 40, 70 12, 50 12 Z" fill="#FFFDF7" stroke="#8FA394" stroke-width="3"/>
+      <circle cx="40" cy="40" r="5" fill="#7FCB85"/><circle cx="58" cy="52" r="6" fill="#7FCB85"/><circle cx="42" cy="66" r="4.5" fill="#7FCB85"/><circle cx="60" cy="30" r="3.5" fill="#7FCB85"/>
+    </symbol>
+    <symbol id="xmark" viewBox="0 0 100 100">
+      <path d="M22 22 L78 78 M78 22 L22 78" stroke="#2B3A2E" stroke-width="14" stroke-linecap="round"/>
+    </symbol>
+    <!-- UI icons -->
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h9.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 3a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7V17h6v-.5c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 3Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></symbol>
+    <symbol id="i-clear" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M6 3v4h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 22c4.4 0 7-2.8 7-6.6 0-3.2-2-5.3-3.4-7.2-.5 1.4-1.3 2.3-2.4 2.6.3-3-1-6.3-3.6-7.8.2 2.6-1 4.4-2.4 6.2C5.9 10.9 5 12.7 5 15.4 5 19.2 7.6 22 12 22Z" fill="currentColor"/></symbol>
+  </defs><g transform=""><use href="#ko"/></g></svg>

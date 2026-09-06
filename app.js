@@ -14,7 +14,25 @@
   };
 
   // ---------- settings & stats ----------
-  const settings = Object.assign({ autoX: false, showErrors: true, checkSolution: false, patterns: false, sound: true, haptics: true, showTimer: true, seenHelp: false, tool: 'cycle' }, LS.get('settings', {}));
+  const settings = Object.assign({ autoX: false, showErrors: true, checkSolution: false, patterns: false, sound: true, haptics: true, showTimer: true, seenHelp: false, tool: 'cycle', character: 'dino' }, LS.get('settings', {}));
+  if (!['dino', 'koala'].includes(settings.character)) settings.character = 'dino';
+  const CHARACTERS = { dino: { title: 'Yodoku', name: 'Yo', symbol: 'yo', animal: 'dino', emoji: '🦖' }, koala: { title: 'Kodoku', name: 'Ko', symbol: 'ko', animal: 'koala', emoji: '🐨' } };
+  const character = () => CHARACTERS[settings.character];
+  const mascot = (face = '') => '#' + character().symbol + (face ? '-' + face : '');
+  function characterText(text) {
+    return text.replace(/\b(?:dinos|koalas|dino|koala)\b/gi, word => {
+      const animal = character().animal + (/s$/i.test(word) ? 's' : '');
+      return /^[A-Z]/.test(word) ? animal[0].toUpperCase() + animal.slice(1) : animal;
+    }).replace(/\b(?:Yodoku|Kodoku)\b/g, character().title).replace(/\b(?:Yo|Ko)\b/g, character().name);
+  }
+  function translateCharacter(root = document.body) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement?.closest('script,style,svg,.character-choices,.brand-name')) continue;
+      const text = characterText(node.nodeValue); if (text !== node.nodeValue) node.nodeValue = text;
+    }
+  }
   // Switch old automatic defaults to manual once; later choices are preserved.
   if (!settings.manualDefaultV2) { settings.autoX = false; settings.manualDefaultV2 = true; }
   if (!['cycle', 'dino', 'x'].includes(settings.tool)) settings.tool = 'cycle';
@@ -51,11 +69,44 @@
 
   // ---------- audio & haptics ----------
   let actx = null;
+  const soundBuffers = new Map(), pendingSounds = new Set();
+  let lastNoteSound = 0;
+  function audioContext() {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    return actx;
+  }
+  function loadCharacterSounds() {
+    if (!settings.sound) return;
+    let context; try { context = audioContext(); } catch { return; }
+    for (const event of ['x', 'clear', 'place', 'error', 'hint', 'win']) {
+      const key = `${character().symbol}-${event}`;
+      if (soundBuffers.has(key) || pendingSounds.has(key)) continue;
+      pendingSounds.add(key);
+      fetch(`assets/sounds/${key}.wav`).then(r => { if (!r.ok) throw new Error('Sound unavailable'); return r.arrayBuffer(); })
+        .then(data => context.decodeAudioData(data)).then(buffer => soundBuffers.set(key, buffer)).catch(() => {}).finally(() => pendingSounds.delete(key));
+    }
+  }
+  function playSound(event, fallback) {
+    if (!settings.sound) return;
+    if (['x', 'clear'].includes(event)) { const now = performance.now(); if (lastNoteSound && now - lastNoteSound < 45) return; lastNoteSound = now; }
+    try {
+      const context = audioContext(), buffer = soundBuffers.get(`${character().symbol}-${event}`);
+      loadCharacterSounds();
+      if (buffer) {
+        const source = context.createBufferSource(), gain = context.createGain();
+        source.buffer = buffer; gain.gain.value = .65; source.connect(gain); gain.connect(context.destination); source.start();
+        source.onended = () => { source.disconnect(); gain.disconnect(); };
+        return;
+      }
+    } catch { /* The synthesized fallback also handles unsupported audio. */ }
+    fallback();
+  }
   function tone(freq, dur, type, vol, when) {
     if (!settings.sound) return;
     try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      if (actx.state === 'suspended') actx.resume();
+      audioContext();
+      if (settings.character === 'koala') freq *= .75;
       const t = actx.currentTime + (when || 0);
       const o = actx.createOscillator(), g = actx.createGain();
       o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
@@ -64,19 +115,19 @@
     } catch (e) { /* no audio */ }
   }
   const sfx = {
-    x: () => tone(330, 0.06, 'triangle', 0.08),
-    clear: () => tone(240, 0.07, 'triangle', 0.07),
-    place: () => { tone(520, 0.09, 'sine', 0.12); tone(780, 0.14, 'sine', 0.12, 0.07); },
-    error: () => tone(140, 0.18, 'square', 0.05),
-    hint: () => { tone(660, 0.08, 'sine', 0.08); tone(880, 0.12, 'sine', 0.08, 0.09); },
-    win: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, 'sine', 0.12, i * 0.11))
+    x: () => playSound('x', () => tone(440, 0.06, 'triangle', 0.08)),
+    clear: () => playSound('clear', () => tone(294, 0.07, 'triangle', 0.07)),
+    place: () => playSound('place', () => { tone(523, 0.09, 'sine', 0.12); tone(784, 0.14, 'sine', 0.12, 0.07); }),
+    error: () => playSound('error', () => tone(220, 0.14, 'triangle', 0.07)),
+    hint: () => playSound('hint', () => { tone(659, 0.08, 'sine', 0.08); tone(880, 0.12, 'sine', 0.08, 0.09); }),
+    win: () => playSound('win', () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, 'sine', 0.12, i * 0.11)))
   };
   const buzz = ms => { if (settings.haptics && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { /* ignore */ } } };
 
   // ---------- toast ----------
   const toastEl = $('#toast'); let toastTimer = 0;
   function toast(msg, ms) {
-    toastEl.textContent = msg; toastEl.classList.add('show');
+    toastEl.textContent = characterText(msg); toastEl.classList.add('show');
     clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms || 2200);
   }
 
@@ -226,10 +277,10 @@
     const want = v === 0 ? '' : v === 1 ? 'x' : 'dino';
     if (el.dataset.v === want && !animate) return;
     el.dataset.v = want;
-    el.setAttribute('aria-label', `Row ${Math.floor(i / game.puzzle.n) + 1}, column ${i % game.puzzle.n + 1}, region ${game.puzzle.region[i] + 1}: ${v === 0 ? 'empty' : v === 1 ? 'crossed out' : 'dino'}`);
+    el.setAttribute('aria-label', `Row ${Math.floor(i / game.puzzle.n) + 1}, column ${i % game.puzzle.n + 1}, region ${game.puzzle.region[i] + 1}: ${v === 0 ? 'empty' : v === 1 ? 'crossed out' : character().animal}`);
     if (v === 0) el.innerHTML = '';
     else if (v === 1) el.innerHTML = `<div class="x${animate ? ' pop' : ''}"><svg><use href="#xmark"/></svg></div>`;
-    else el.innerHTML = `<div class="dino${animate ? ' pop' : ''}"><svg><use href="#yo"/></svg></div>`;
+    else el.innerHTML = `<div class="dino${animate ? ' pop' : ''}"><svg><use href="${mascot()}"/></svg></div>`;
   }
 
   function renderErrors() {
@@ -248,8 +299,8 @@
       const el = cellEls[i], isBad = bad.has(i);
       el.classList.toggle('err', isBad);
       el.setAttribute('aria-invalid', String(isBad));
-      if (isBad) el.setAttribute('aria-description', visibleIssues.filter(issue => issue.dinos.includes(i)).map(issue => issue.message).join(' ')); else el.removeAttribute('aria-description');
-      const use = el.querySelector('.dino use'); if (use) use.setAttribute('href', game.solved ? '#yo-happy' : isBad ? '#yo-oops' : '#yo');
+      if (isBad) el.setAttribute('aria-description', characterText(visibleIssues.filter(issue => issue.dinos.includes(i)).map(issue => issue.message).join(' '))); else el.removeAttribute('aria-description');
+      const use = el.querySelector('.dino use'); if (use) use.setAttribute('href', mascot(game.solved ? 'happy' : isBad ? 'oops' : ''));
     }
     renderFeedback();
     return bad.size;
@@ -268,8 +319,9 @@
     let settled = placed - conflicts.bad.size;
     if (settings.checkSolution) settled = game.cells.filter((v, i) => v === 2 && !conflicts.bad.has(i) && game.puzzle.sol[Math.floor(i / n)] === i % n).length;
     const progress = $('#settledProgress'); progress.setAttribute('aria-valuemax', n); progress.setAttribute('aria-valuenow', settled);
-    progress.setAttribute('aria-valuetext', `${settled} of ${n} dinos without conflicts`);
+    progress.setAttribute('aria-valuetext', characterText(`${settled} of ${n} dinos without conflicts`));
     $('span', progress).style.width = `${settled / n * 100}%`;
+    translateCharacter($('#feedback'));
     return settled;
   }
   function inspectRegion(g) {
@@ -277,6 +329,7 @@
     Array.from($('#regionButtons').children).forEach((button, i) => button.setAttribute('aria-pressed', String(i === g)));
     const count = game.puzzle.region.filter(id => id === g).length;
     $('#regionMessage').textContent = `Region ${g + 1}: ${count} ${count === 1 ? 'square' : 'squares'}. It needs one dino.`;
+    translateCharacter($('#regionInspector'));
   }
   function closeRegionInspector() {
     cellEls.forEach(el => el.classList.remove('region-selected', 'region-muted'));
@@ -319,6 +372,7 @@
       nextBtn.innerHTML = game.solved ? '<svg><use href="#i-next"/></svg>Next' : '<svg><use href="#i-next"/></svg>New';
     }
     renderTimer();
+    translateCharacter();
   }
 
   function updateTabDots() {
@@ -521,6 +575,7 @@
         ['single', 'look'].includes(h.kind) ? `Place a dino at ${places}.` : valid.length ? `Mark X at ${places}. ${h.msg}` : h.msg;
     }
     $('#hintMessage').textContent = message;
+    translateCharacter($('#hintCard'));
     $('#btnHintMore').textContent = stage === 1 ? 'Explain why' : 'Show exact cells';
     $('#btnHintMore').classList.toggle('hidden', stage === 3);
     $('#hintCard').scrollIntoView({ block: 'nearest', behavior: 'instant' });
@@ -549,7 +604,7 @@
     board.classList.add('won');
     for (const el of cellEls) el.classList.remove('err');
     // wave of happy dinos
-    $$('.dino', board).forEach((d, k) => { setTimeout(() => { d.classList.remove('pop'); void d.offsetWidth; d.classList.add('pop'); d.querySelector('use').setAttribute('href', '#yo-happy'); }, k * 70); });
+    $$('.dino', board).forEach((d, k) => { setTimeout(() => { d.classList.remove('pop'); void d.offsetWidth; d.classList.add('pop'); d.querySelector('use').setAttribute('href', mascot('happy')); }, k * 70); });
     sfx.win(); buzz([20, 60, 20, 60, 40]);
     confetti();
     const wonGame = game;
@@ -558,12 +613,12 @@
 
   function emojiGrid() {
     const { n, region } = game.puzzle; let out = '';
-    for (let y = 0; y < n; y++) { for (let x = 0; x < n; x++) { const i = y * n + x; out += game.cells[i] === 2 ? '🦖' : EMOJI[game.colors[region[i]]]; } out += '\n'; }
+    for (let y = 0; y < n; y++) { for (let x = 0; x < n; x++) { const i = y * n + x; out += game.cells[i] === 2 ? character().emoji : EMOJI[game.colors[region[i]]]; } out += '\n'; }
     return out;
   }
   function shareText() {
     const t = fmtTime(currentElapsed()), n = game.puzzle.n;
-    const head = mode === 'daily' ? `Yodoku Daily ${game.dateStr} (${n}×${n})` : `Yodoku ${Y.DIFFS[mode].label} · Level ${stats[mode].solved} (${n}×${n})`;
+    const head = mode === 'daily' ? `${character().title} Daily ${game.dateStr} (${n}×${n})` : `${character().title} ${Y.DIFFS[mode].label} · Level ${stats[mode].solved} (${n}×${n})`;
     const streak = mode === 'daily' && currentStreak() > 1 ? ` · 🔥 ${currentStreak()}` : '';
     return `${head}\n⏱ ${t} · 💡 ${game.hints} hint${game.hints === 1 ? '' : 's'}${streak}\n${emojiGrid()}${location.href.split('#')[0]}`;
   }
@@ -585,6 +640,7 @@
     $('#winGrid').textContent = emojiGrid();
     $('#btnWinNext').innerHTML = mode === 'daily' ? `<svg width="22" height="22"><use href="#i-next"/></svg>${game.dateStr !== today() ? 'Today’s puzzle' : 'Play more'}` : '<svg width="22" height="22"><use href="#i-next"/></svg>Next puzzle';
     openModal('#winModal');
+    translateCharacter($('#winModal'));
   }
 
   // ---------- confetti ----------
@@ -606,7 +662,7 @@
       for (const p of parts) {
         p.x += p.vx; p.y += p.vy; p.vy += .45; p.vx *= .99; p.rot += p.vr;
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.globalAlpha = Math.max(0, 1 - Math.max(0, dt - 1.6));
-        if (p.egg) { ctx.beginPath(); ctx.ellipse(0, 0, p.r * .8, p.r, 0, 0, 6.29); ctx.fill(); } else ctx.fillRect(-p.r / 2, -p.r / 3, p.r, p.r * .66);
+        if (p.egg) { if (settings.character === 'koala') ctx.fillStyle = '#8DB58A'; ctx.beginPath(); ctx.ellipse(0, 0, p.r * (settings.character === 'koala' ? .45 : .8), p.r, 0, 0, 6.29); ctx.fill(); } else ctx.fillRect(-p.r / 2, -p.r / 3, p.r, p.r * .66);
         ctx.restore();
       }
       if (dt < 2.6) requestAnimationFrame(frame); else { cv.classList.add('hidden'); ctx.clearRect(0, 0, innerWidth, innerHeight); }
@@ -651,8 +707,8 @@
       button.style.background = `var(--c${Math.floor(i / 4)})`;
       button.classList.toggle('target', !practiceDone && targets.includes(i));
       button.classList.toggle('practice-error', practiceStep === 2 && !practiceDone && [1, 6].includes(i));
-      button.setAttribute('aria-label', `Practice row ${Math.floor(i / 4) + 1}, column ${i % 4 + 1}: ${value === 2 ? 'dino' : value === 1 ? 'X' : 'empty'}${targets.includes(i) && !practiceDone ? ', try here' : ''}`);
-      if (value) button.innerHTML = `<svg aria-hidden="true"><use href="#${value === 1 ? 'xmark' : practiceStep === 2 && !practiceDone ? 'yo-oops' : practiceStep === 3 && practiceDone ? 'yo-happy' : 'yo'}"/></svg>`;
+      button.setAttribute('aria-label', `Practice row ${Math.floor(i / 4) + 1}, column ${i % 4 + 1}: ${value === 2 ? character().animal : value === 1 ? 'X' : 'empty'}${targets.includes(i) && !practiceDone ? ', try here' : ''}`);
+      if (value) button.innerHTML = `<svg aria-hidden="true"><use href="${value === 1 ? '#xmark' : mascot(practiceStep === 2 && !practiceDone ? 'oops' : practiceStep === 3 && practiceDone ? 'happy' : '')}"/></svg>`;
       button.addEventListener('click', () => {
         if (practiceDone) return;
         if (!practiceTargets().includes(i)) { $('#tutorialStatus').textContent = 'Try a dashed outline. You can experiment freely in your own puzzle.'; return; }
@@ -660,12 +716,14 @@
         practiceDone = practiceStep < 3 || practiceTargets().length === 0;
         renderPractice();
         $('#tutorialStatus').textContent = practiceDone ? ['A cosy home! Every row, column and colour gets one dino.', 'Exactly! X marks are your notes. Auto X is optional.', 'Much better! Dinos need space—even corner to corner.', 'Everyone’s home! You’re ready. Undo and hints are always there to help.'][practiceStep] : 'Lovely! Keep filling the outlined homes.';
+        translateCharacter($('#tutorialModal'));
         if (practiceDone) $('#btnTutorialNext').focus(); else container.children[practiceTargets()[0]].focus();
       });
       container.appendChild(button);
     }
     $('#btnTutorialNext').disabled = !practiceDone;
     $('#btnTutorialNext').textContent = practiceStep === 3 ? 'Play my puzzle' : 'Next step';
+    translateCharacter($('#tutorialModal'));
   }
   $('#btnTutorial').addEventListener('click', () => {
     practiceStep = 0; practiceCells = Array(16).fill(0); practiceDone = false;
@@ -682,6 +740,32 @@
   $('#btnTutorialClose').addEventListener('click', () => { closeModal('#tutorialModal'); $('#btnHelp').focus(); });
   $('#btnSettings').addEventListener('click', () => { renderStats(); openModal('#settingsModal'); });
   $('#btnSettingsClose').addEventListener('click', () => closeModal('#settingsModal'));
+  function renderCharacter() {
+    const skin = character(); document.body.dataset.character = settings.character;
+    document.title = `${skin.title} — a cosy logic puzzle`;
+    $('#brandPrefix').textContent = skin.name;
+    $('#btnCharacter').setAttribute('aria-label', `Switch to ${settings.character === 'dino' ? 'Kodoku, the koala' : 'Yodoku, the dino'} theme`);
+    $('link[rel="icon"]').setAttribute('href', settings.character === 'koala' ? 'assets/ko-icon.svg' : 'icons/icon.svg');
+    for (const button of $$('.character-choice')) button.setAttribute('aria-pressed', String(button.dataset.character === settings.character));
+    for (const use of $$('use')) {
+      if (use.closest('defs,.character-choices')) continue;
+      const match = /^(?:#yo|#ko)(-happy|-oops|-head)?$/.exec(use.getAttribute('href') || '');
+      if (match) use.setAttribute('href', '#' + skin.symbol + (match[1] || ''));
+    }
+    $('[data-tool="dino"]').textContent = skin.animal[0].toUpperCase() + skin.animal.slice(1);
+    for (let i = 0; i < cellEls.length; i++) { delete cellEls[i].dataset.v; renderCell(i, false); }
+    renderErrors(); renderLabels(); translateCharacter();
+  }
+  function selectCharacter(value) {
+    if (settings.character === value) return;
+    settings.character = value; saveSettings(); renderCharacter(); loadCharacterSounds();
+    const mark = $('.logo .mark'); mark.classList.remove('mascot-greeting'); void mark.offsetWidth; mark.classList.add('mascot-greeting');
+    if (settings.sound) sfx.place();
+    toast(`Hello from ${character().name}! Your puzzle is right where you left it.`);
+  }
+  $('#btnCharacter').addEventListener('click', () => selectCharacter(settings.character === 'dino' ? 'koala' : 'dino'));
+  for (const button of $$('.character-choice')) button.addEventListener('click', () => selectCharacter(button.dataset.character));
+  $('#btnSoundPreview').addEventListener('click', () => { if (settings.sound) sfx.place(); else toast('Turn on Sounds to hear your character.'); });
   $('#btnShare').addEventListener('click', share);
   $('#btnWinNext').addEventListener('click', () => { closeModal('#winModal'); if (mode === 'daily') switchMode(game.dateStr !== today() ? 'daily' : stats.normal.solved > 3 ? 'hard' : 'normal'); else startNew(); });
   for (const sw of $$('.switch')) {
@@ -774,7 +858,7 @@
     if (modal) {
       if (e.key === 'Escape') closeModal('#' + modal.id);
       if (e.key === 'Tab') {
-        const buttons = $$('button:not([disabled])', modal), first = buttons[0], last = buttons[buttons.length - 1];
+        const buttons = $$('button:not([disabled]),a[href]', modal), first = buttons[0], last = buttons[buttons.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
@@ -803,6 +887,7 @@
   // ---------- boot ----------
   switchMode(mode);
   renderInput();
+  renderCharacter();
   if (!settings.seenHelp) setTimeout(() => openModal('#helpModal'), 400);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* offline support unavailable */ }));

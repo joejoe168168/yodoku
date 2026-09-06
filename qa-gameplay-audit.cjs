@@ -117,7 +117,7 @@ const Y = require('./engine');
     await run('sound and haptic preferences gate their effects',async page=>{
       await page.evaluate(()=>{
         window.tones=0;window.buzzes=0;const Original=window.AudioContext;
-        window.AudioContext=class extends Original{createOscillator(){window.tones++;return super.createOscillator();}};
+        window.AudioContext=class extends Original{createOscillator(){window.tones++;return super.createOscillator();}createBufferSource(){window.tones++;return super.createBufferSource();}};
         Object.defineProperty(navigator,'vibrate',{configurable:true,value:()=>{window.buzzes++;return true;}});
       });
       await page.locator('.cell').nth(0).click();assert.equal(await page.evaluate(()=>window.tones+window.buzzes),0);
@@ -127,6 +127,33 @@ const Y = require('./engine');
     await run('malformed cells and null statistics recover safely',async page=>{
       assert.equal(await page.locator('.cell').count(),49);assert.equal((await state(page)).cells.every(v=>v===0),true);await page.locator('#btnSettings').click();await page.locator('#settingsModal.open').waitFor();await page.locator('#statGrid').scrollIntoViewIfNeeded();await tick(page,250);assert.match(await page.locator('#statGrid').innerText(),/Normal solved/);
     },{stats:null,'game.normal':save(p,{cells:Array(49).fill('invalid')})});
+    await run('character switching preserves moves and fits a small phone',async page=>{
+      await page.setViewportSize({width:320,height:568});
+      await page.locator('.cell').nth(0).click();const before=await state(page);
+      await page.locator('#btnCharacter').click();assert.match(await page.title(),/^Kodoku/);
+      assert.equal(await page.locator('.dino use').first().getAttribute('href'),'#ko');
+      assert.equal(await page.locator('[data-tool="dino"]').innerText(),'Koala');
+      assert.match(await page.locator('.cell').nth(0).getAttribute('aria-label'),/koala/);
+      assert.deepEqual((await state(page)).cells,before.cells);assert.deepEqual((await state(page)).history,before.history);
+      await page.reload();assert.match(await page.title(),/^Kodoku/);assert.deepEqual((await state(page)).puzzle,before.puzzle);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+2));
+      await page.screenshot({path:'preview-kodoku-mobile.png',fullPage:true});
+      await page.locator('.cell').nth(1).click();assert.equal(await page.locator('.dino use[href="#ko-oops"]').count(),2);
+      await page.locator('#btnSettings').click();await page.locator('[data-character="dino"]').click();await page.locator('#btnSettingsClose').click();assert.match(await page.title(),/^Yodoku/);
+      await page.locator('#btnUndo').click();assert.deepEqual((await state(page)).cells,before.cells);
+    });
+    await run('koala completion shares Kodoku and koala emoji',async page=>{
+      await page.locator('#btnCharacter').click();
+      await page.evaluate(()=>Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.shared=data.text;}}));
+      await page.locator('.cell').nth(6*7+p.sol[6]).click();await tick(page,1500);
+      assert.equal(await page.locator('.dino use[href="#ko-happy"]').count(),7);
+      await page.locator('#btnShare').click();assert.match(await page.evaluate(()=>window.shared),/^Kodoku/);assert.equal((await page.evaluate(()=>window.shared)).split('🐨').length-1,7);
+    },{'game.normal':almostSolved(p)});
+    await run('koala assets decode and theme survives offline reload',async(page,context)=>{
+      await page.locator('#btnCharacter').click();await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await context.setOffline(true);await page.reload();assert.match(await page.title(),/^Kodoku/);
+      const durations=await page.evaluate(async()=>{const a=new AudioContext();try{return await Promise.all(['yo','ko'].flatMap(s=>['x','clear','place','error','hint','win'].map(async e=>{const r=await fetch(`assets/sounds/${s}-${e}.wav`);if(!r.ok)throw Error(r.status);return (await a.decodeAudioData(await r.arrayBuffer())).duration;})));}finally{await a.close();}});
+      assert.equal(durations.length,12);assert.ok(durations.every(d=>d>0&&d<2));
+    });
     console.log(JSON.stringify({passed,failures},null,2)); if(failures.length)process.exitCode=1;
   } finally { await browser.close(); server.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});

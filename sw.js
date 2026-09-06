@@ -1,6 +1,6 @@
 /* Yodoku service worker — offline-first app shell */
-const CACHE = 'yodoku-v5';
-const SHELL = ['./', './index.html', './app.js', './engine.js', './manifest.json', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const CACHE = 'yodoku-v6';
+const SHELL = ['./', './index.html', './app.js', './engine.js', './manifest.json', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './assets/ko-icon.svg', ...['yo','ko'].flatMap(character => ['x','clear','place','error','hint','win'].map(event => `./assets/sounds/${character}-${event}.wav`))];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(url => new Request(url, { cache: 'reload' })))).then(() => self.skipWaiting()));

@@ -48,8 +48,8 @@ svg{display:block}
 header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 8px}
 .logo{display:flex;align-items:center;gap:8px}
 .logo .mark{width:40px;height:40px;filter:drop-shadow(0 2px 0 rgba(47,107,58,.25))}
-.logo h1{margin:0;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1;color:var(--green-dark)}
-.logo h1 span{color:var(--orange)}
+.logo .brand-name{margin:0;font-size:28px;font-weight:700;letter-spacing:.5px;line-height:1;color:var(--green-dark)}
+.logo .brand-name .brand-suffix{color:var(--orange)}
 .iconbtn{width:var(--tap);height:var(--tap);border-radius:16px;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;color:var(--green-dark);transition:transform .12s}
 .iconbtn:active{transform:scale(.92)}
 .hdr-right{display:flex;gap:8px}
@@ -151,14 +151,14 @@ canvas.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:non
 .statgrid .stat{text-align:left;padding:12px 14px}
 .statgrid .stat b{font-size:20px}
 .emoji-grid{font-size:14px;line-height:1.15;text-align:center;letter-spacing:1px;margin:8px 0;white-space:pre;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
-@media (max-height:640px){ .logo h1{font-size:24px} .ctl{min-height:56px} .controls{padding-top:8px} }
+@media (max-height:640px){ .logo .brand-name{font-size:24px} .ctl{min-height:56px} .controls{padding-top:8px} }
 @media (min-width:600px){ body{align-items:center} header,.tabs,.status,.board-wrap,.controls{width:100%;max-width:560px} }
 @media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms!important;transition-duration:.01ms!important} }
 
 /* A little garden, with the puzzle always in reach. */
 body{height:auto;min-height:100dvh;max-width:1100px;margin:auto;padding-top:calc(var(--sat) + 20px);background-color:#FAF8EF;background-image:radial-gradient(ellipse at 0% 0%,#DEECD5 0,transparent 45%),radial-gradient(ellipse at 100% 100%,#FCE3CD 0,transparent 45%)}
 header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-width:560px;margin-left:auto;margin-right:auto}
-.logo .mark{width:56px;height:56px}.logo h1{font-size:34px;letter-spacing:-1px}.logo h1 span{color:#DA805B}
+.logo .mark{width:56px;height:56px}.logo .brand-name{font-size:34px;letter-spacing:-1px}.logo .brand-name .brand-suffix{color:#DA805B}
 .intro{display:flex;align-items:center;justify-content:space-between;padding:12px 2px 18px;gap:16px}.intro h2{font-size:26px;letter-spacing:-.6px;margin:0 0 5px;color:#285841}.intro p{margin:0;font-size:14px;color:#687B68;line-height:1.5}.intro svg{width:74px;height:74px;flex-shrink:0;transform:rotate(8deg)}
 .tabs{background:#E8ECDD}.tab{min-height:44px}.tab[aria-selected="true"]{color:#285841}
 .status{padding-top:5px;padding-bottom:12px}.board-wrap{flex:0 0 auto}.board{width:100%;max-width:min(560px,calc(100dvh - 370px));min-width:280px;border:3px solid #38583F;border-radius:18px;box-shadow:0 7px 0 #D9DFC9,0 15px 35px #38583F12}
@@ -166,7 +166,7 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
 .playbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:18px}.tools{display:flex;gap:3px;padding:4px;background:#E8ECDD;border-radius:17px}.tool{min-width:64px;min-height:44px;padding:0 10px;border-radius:13px;font-size:14px;font-weight:500}.tool[aria-pressed="true"]{background:#285841;color:white;box-shadow:0 2px 4px #28584120}.auto-toggle{font-size:13px;min-height:48px;padding:0 12px;border:1px solid #CAD7C1;border-radius:16px;background:#FFFFFF80;color:#285841}.auto-toggle[aria-pressed="true"]{background:#DDEDD3}
 .tip{font-size:12px;text-align:center;color:#687B68;line-height:1.5;margin-top:9px;margin-bottom:0;min-height:18px}.controls{padding-top:14px;padding-bottom:16px}.ctl{min-height:62px;border:1px solid #E5E8DD;box-shadow:0 3px 0 #E5E8DD;border-radius:18px}.ctl.primary,.big{background:#285841;color:white}.pill{color:#285841}.scrim:not(.open){visibility:hidden}.sheet{border:1px solid #E5E8DD}
 @media(min-width:850px) and (min-height:650px){body{display:grid;grid-template-columns:280px minmax(0,560px);column-gap:60px;align-content:center;justify-content:center;padding:36px}header{grid-column:1;grid-row:1}.intro{grid-column:1;grid-row:2 / span 2;display:block;align-self:center}.intro h2{font-size:38px;line-height:1.08}.intro p{font-size:16px;margin-top:14px}.intro svg{width:150px;height:150px;margin:24px auto 0;transform:rotate(-6deg)}.tabs{grid-column:2;grid-row:1}.status{grid-column:2;grid-row:2}.board-wrap{grid-column:2;grid-row:3}.board{max-width:min(560px,calc(100dvh - 265px))}.playbar{grid-column:2;grid-row:4}.tip{grid-column:2;grid-row:5}.controls{grid-column:1;grid-row:4 / span 2;grid-template-columns:repeat(2,1fr);align-self:end}.sheet{border-radius:28px}.scrim{align-items:center}}
-@media(max-width:380px){body{padding-left:10px;padding-right:10px}.intro{padding:6px 2px 10px}.intro h2{font-size:22px}.intro svg{width:50px;height:50px}.tool{min-width:54px;padding:0 8px}.auto-toggle{padding:0 8px}.logo h1{font-size:29px}.board{min-width:0}}
+@media(max-width:380px){body{padding-left:10px;padding-right:10px}.intro{padding:6px 2px 10px}.intro h2{font-size:22px}.intro svg{width:50px;height:50px}.tool{min-width:54px;padding:0 8px}.auto-toggle{padding:0 8px}.logo .brand-name{font-size:29px}.board{min-width:0}}
 @media(max-height:740px) and (max-width:849px){body{padding-top:calc(var(--sat) + 6px)}.intro{padding:3px 2px 10px}.intro svg{display:none}.intro h2{font-size:20px}.board{max-width:min(480px,calc(100dvh - 325px));min-width:min(100%,310px)}.logo .mark{width:42px;height:42px}.playbar{margin-top:12px}.controls{padding-top:10px}}
 @media(max-height:500px) and (orientation:landscape){.intro{display:none}.board{min-width:300px}body{overflow:auto}.board-wrap{margin-top:8px}}
 @media(max-width:599px){.intro{padding:6px 2px 12px}.intro h2{font-size:22px;line-height:1.12}.intro p{font-size:12px;line-height:1.4}.intro svg{width:62px;height:62px}.board{max-width:min(100%,calc(100dvh - 440px));min-width:min(100%,300px)}.controls{padding-bottom:6px}.tip{margin-top:6px}.playbar{margin-top:14px}}
@@ -182,7 +182,7 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
 .region-inspector{margin-top:6px}.region-buttons{display:grid;grid-template-columns:repeat(var(--regions),minmax(0,1fr));gap:3px;margin:7px 0}.feedback .region-buttons button{min-height:44px;padding:0;border:2px solid transparent;color:#253D32}.feedback .region-buttons button[aria-pressed="true"]{border-color:#285841;box-shadow:inset 0 0 0 2px white}.cell.region-muted{opacity:.25}.cell.region-selected{box-shadow:inset 0 0 0 3px #285841;z-index:1}.cell .dino svg{width:84%;height:84%}.cell .dino{inset:2px}
 @media(max-width:599px){
  body{padding:calc(var(--sat) + 4px) calc(var(--sar) + 8px) calc(var(--sab) + 6px) calc(var(--sal) + 8px);justify-content:flex-start}
- header{padding:0 0 4px;gap:6px}.logo{gap:3px}.logo .mark{width:36px;height:36px}.logo h1{font-size:27px}.hdr-right{gap:6px}.iconbtn{width:44px;height:44px;border-radius:13px;box-shadow:0 2px 4px #38583F12}
+ header{padding:0 0 4px;gap:6px}.logo{gap:3px}.logo .mark{width:36px;height:36px}.logo .brand-name{font-size:27px}.hdr-right{gap:6px}.iconbtn{width:44px;height:44px;border-radius:13px;box-shadow:0 2px 4px #38583F12}
  .intro{display:none}.tabs{margin-bottom:2px;padding:3px;border-radius:14px}.tab{min-height:38px;font-size:13px;border-radius:11px}
  .status{padding:2px 2px 4px;font-size:12px;min-height:30px;gap:4px}.pill{padding:3px 6px}.region-toggle{font-size:11px}
  .board-wrap{width:100%;margin:0}.board{width:100%;max-width:100%;min-width:0;border-radius:13px;box-shadow:0 4px 0 #D9DFC9}
@@ -193,8 +193,15 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
 }
 @media(max-height:500px) and (min-width:600px) and (orientation:landscape){
  body{display:grid;grid-template-columns:minmax(240px,1fr) minmax(280px,calc(100dvh - 20px));column-gap:16px;align-content:center;padding:8px 16px;max-width:1000px;margin:auto}
- header{grid-column:1;grid-row:1;padding:0}.logo .mark{width:32px;height:32px}.logo h1{font-size:26px}.intro{display:none}.tabs{grid-column:1;grid-row:2;margin:0}.tab{min-height:36px;font-size:12px}.status{grid-column:1;grid-row:3;font-size:12px;padding:0}.board-wrap{grid-column:2;grid-row:1 / span 7;margin:0}.board{min-width:0;max-width:100%;width:100%}.feedback{grid-column:1;grid-row:4;max-height:120px;overflow:auto;margin:0;padding:5px 8px}.feedback:not(.has-error):not(.has-hint):not(.has-region){display:none}.playbar{grid-column:1;grid-row:5;margin:0}.tool{min-width:0;padding:0 8px}.tip{grid-column:1;grid-row:6;margin:0;font-size:11px}.controls{grid-column:1;grid-row:7;padding:0;gap:5px}.ctl{min-height:44px;font-size:11px;flex-direction:row}.ctl svg{width:18px;height:18px}
+ header{grid-column:1;grid-row:1;padding:0}.logo .mark{width:32px;height:32px}.logo .brand-name{font-size:26px}.intro{display:none}.tabs{grid-column:1;grid-row:2;margin:0}.tab{min-height:36px;font-size:12px}.status{grid-column:1;grid-row:3;font-size:12px;padding:0}.board-wrap{grid-column:2;grid-row:1 / span 7;margin:0}.board{min-width:0;max-width:100%;width:100%}.feedback{grid-column:1;grid-row:4;max-height:120px;overflow:auto;margin:0;padding:5px 8px}.feedback:not(.has-error):not(.has-hint):not(.has-region){display:none}.playbar{grid-column:1;grid-row:5;margin:0}.tool{min-width:0;padding:0 8px}.tip{grid-column:1;grid-row:6;margin:0;font-size:11px}.controls{grid-column:1;grid-row:7;padding:0;gap:5px}.ctl{min-height:44px;font-size:11px;flex-direction:row}.ctl svg{width:18px;height:18px}
 }
+/* Character skins share the same compact playing layout. */
+.logo{border-radius:12px;text-align:left}.logo .swap-cue{font-size:13px;opacity:.6;margin-left:2px}.character-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.character-choice{border:2px solid #DFE6D8;border-radius:18px;padding:10px;display:flex;align-items:center;gap:8px;text-align:left;min-height:80px}.character-choice svg{width:54px;height:54px;flex-shrink:0}.character-choice small{display:block;font-size:12px;color:var(--ink-soft);margin-top:3px}.character-choice[aria-pressed="true"]{border-color:var(--green-dark);background:#EDF3E5}.skin-note{font-size:12px!important;text-align:center}.sound-preview{min-height:44px;padding:8px 14px;background:var(--bg2);border-radius:12px;margin-top:8px}
+body[data-character="koala"]{--green-dark:#475976;--green:#8AA79B;--bg2:#EAE8F3;background-color:#F7F6F3;background-image:radial-gradient(ellipse at 0% 0%,#E3E7F2 0,transparent 45%),radial-gradient(ellipse at 100% 100%,#DAEBDD 0,transparent 45%)}body[data-character="koala"] .logo .brand-name{color:#475976}body[data-character="koala"] .logo .brand-name .brand-suffix{color:#AE7897}body[data-character="koala"] .ctl.primary,body[data-character="koala"] .big,body[data-character="koala"] .tool[aria-pressed="true"]{background:#475976}body[data-character="koala"] .character-choice[aria-pressed="true"]{background:#EEEDF6}
+.mascot-greeting{animation:mascot-greeting .65s ease-in-out}.cell .dino.pop::before{content:'✦';position:absolute;color:#FFFDF3;text-shadow:0 1px #A58739;font-size:18px;right:0;top:0;pointer-events:none;animation:twinkle .45s ease-out forwards}.mascot-eyes{transform-box:fill-box;transform-origin:center;animation:blink 7s infinite}.board .mascot-eyes{animation:none}.intro > svg{animation:cosy-float 5s ease-in-out infinite}.win-hero svg{animation:bounce 1.2s ease-in-out 3}
+@keyframes mascot-greeting{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}65%{transform:rotate(10deg)}}@keyframes twinkle{from{opacity:1;transform:translate(0,4px) scale(.5)}to{opacity:0;transform:translate(3px,-10px) scale(1.2)}}@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.08)}}@keyframes cosy-float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5px) rotate(3deg)}}
+@media(prefers-reduced-motion:reduce){.mascot-eyes,.intro > svg,.win-hero svg,.mascot-greeting{animation:none!important}.cell .dino.pop::before{display:none}}
+@media(max-width:380px){.logo .brand-name{font-size:25px}.character-choice{padding:8px;gap:5px}.character-choice svg{width:42px;height:42px}}
 </style>
 </head>
 <body>
@@ -220,6 +227,28 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
 <symbol id="yo-head" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M37 57Q47 61 55 56" fill="none" stroke="#285841" stroke-width="2" stroke-linecap="round"/></symbol>
 <symbol id="yo-happy" viewBox="0 0 100 100"><use href="#yo-body"/><path d="M37 29q5-8 10 0M55 27q5-8 10 0" stroke="#285841" stroke-width="3" fill="none" stroke-linecap="round"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><path d="M35 55Q46 72 56 55Z" fill="#864A4F"/><path d="M40 60q6-4 11 0" stroke="#F9ADAF" stroke-width="3"/><path d="M12 15v10M7 20h10M84 32v8M80 36h8" stroke="#E9AE39" stroke-width="3" stroke-linecap="round"/></symbol>
 <symbol id="yo-oops" viewBox="0 0 100 100"><use href="#yo-body"/><ellipse cx="43" cy="29" rx="3.5" ry="7" fill="#253D32"/><ellipse cx="61" cy="27" rx="3.5" ry="7" fill="#253D32"/><circle cx="44" cy="26" r="1.4" fill="white"/><circle cx="62" cy="24" r="1.4" fill="white"/><g stroke="#285841" stroke-width="2.5" stroke-linecap="round"><path d="M65 39Q57 30 37 33Q12 32 12 48Q12 65 38 64Q60 66 68 53" fill="#86DA7B"/><path d="M19 42Q27 36 36 38" stroke="#B5EE9B" stroke-width="3" fill="none"/><ellipse cx="27" cy="46" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="40" cy="43" rx="1.4" ry="2" fill="#285841" stroke="none"/><ellipse cx="59" cy="53" rx="5" ry="3.2" fill="#F3A79A" stroke="none"/></g><ellipse cx="46" cy="57" rx="3" ry="4" fill="#864A4F"/><path d="M80 17q-9 13 0 13q8 0 0-13" fill="#8DCFEF"/></symbol>
+    <g id="ko-body" stroke="#485568" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="50" cy="94" rx="31" ry="4" fill="#485568" opacity=".12" stroke="none"/>
+      <ellipse cx="50" cy="73" rx="24" ry="22" fill="#A9B6C9"/>
+      <ellipse cx="50" cy="76" rx="15" ry="15" fill="#FFF8E9" stroke="none"/>
+      <ellipse cx="32" cy="89" rx="12" ry="7" fill="#8F9EB6"/><ellipse cx="68" cy="89" rx="12" ry="7" fill="#8F9EB6"/>
+      <path d="M28 89h7M65 89h7" stroke="#DADEEB"/>
+      <path d="M30 61Q18 60 20 71Q25 78 34 70" fill="#A9B6C9"/>
+      <path d="M68 61Q78 52 82 59Q85 66 72 72" fill="#A9B6C9"/>
+      <path d="M76 75Q82 61 85 45" stroke="#537C61"/>
+      <path d="M82 62Q68 57 75 49Q85 48 82 62M84 54Q83 39 93 41Q98 50 84 54" fill="#A9CF9C" stroke="#537C61" stroke-width="1.8"/>
+      <path d="M29 22Q17 9 7 21Q0 33 10 43Q18 48 29 40M71 22Q83 9 93 21Q100 33 90 43Q82 48 71 40" fill="#A9B6C9"/>
+      <ellipse cx="17" cy="30" rx="9" ry="11" fill="#E1C5D5" stroke="none"/><ellipse cx="83" cy="30" rx="9" ry="11" fill="#E1C5D5" stroke="none"/>
+      <path d="M18 39Q17 19 37 17L43 11L48 16L55 10L58 17Q83 18 82 41Q83 63 51 65Q19 65 18 39Z" fill="#BEC8D8"/>
+      <path d="M25 39Q23 55 39 59Q53 67 68 56Q77 48 72 40Q65 34 55 41Q49 43 44 40Q34 33 25 39" fill="#F9F5EE" stroke="none"/>
+      <ellipse cx="29" cy="48" rx="5" ry="3.3" fill="#EBAFBC" stroke="none"/><ellipse cx="71" cy="48" rx="5" ry="3.3" fill="#EBAFBC" stroke="none"/>
+      <path d="M43 38Q42 29 50 29Q59 29 57 39L55 48Q50 53 45 48Z" fill="#485568" stroke="none"/>
+      <ellipse cx="48" cy="35" rx="2" ry="3" fill="#7C8BA2" stroke="none"/>
+    </g>
+    <symbol id="ko" viewBox="0 0 100 100"><use href="#ko-body"/><g class="mascot-eyes" fill="#364559"><ellipse cx="33" cy="38" rx="3" ry="4"/><ellipse cx="67" cy="38" rx="3" ry="4"/><circle cx="34" cy="36.5" r="1" fill="white"/><circle cx="68" cy="36.5" r="1" fill="white"/></g><path d="M45 55Q50 60 55 55" fill="none" stroke="#485568" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="ko-head" viewBox="0 0 100 100"><use href="#ko"/></symbol>
+    <symbol id="ko-happy" viewBox="0 0 100 100"><use href="#ko-body"/><path d="M29 39q4-7 8 0M63 39q4-7 8 0" fill="none" stroke="#485568" stroke-width="2.5" stroke-linecap="round"/><path d="M43 53Q50 68 57 53Z" fill="#8B596B"/><path d="M47 58q3-2 6 0" fill="none" stroke="#F1ABB9" stroke-width="3"/><path d="M9 56v8M5 60h8M90 10v8M86 14h8" stroke="#D5AB49" stroke-width="2.5" stroke-linecap="round"/></symbol>
+    <symbol id="ko-oops" viewBox="0 0 100 100"><use href="#ko-body"/><circle cx="33" cy="38" r="4" fill="white"/><circle cx="67" cy="38" r="4" fill="white"/><circle cx="33" cy="39" r="2" fill="#364559"/><circle cx="67" cy="39" r="2" fill="#364559"/><ellipse cx="50" cy="56" rx="3" ry="4" fill="#8B596B"/><path d="M84 9q-6 10 0 10q6 0 0-10" fill="#88C9E7"/></symbol>
     <symbol id="egg" viewBox="0 0 100 100">
       <path d="M50 12 C 30 12, 22 40, 22 58 C 22 78, 34 90, 50 90 C 66 90, 78 78, 78 58 C 78 40, 70 12, 50 12 Z" fill="#FFFDF7" stroke="#8FA394" stroke-width="3"/>
       <circle cx="40" cy="40" r="5" fill="#7FCB85"/><circle cx="58" cy="52" r="6" fill="#7FCB85"/><circle cx="42" cy="66" r="4.5" fill="#7FCB85"/><circle cx="60" cy="30" r="3.5" fill="#7FCB85"/>
@@ -240,10 +269,10 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
 </svg>
 
 <header>
-  <div class="logo">
+  <button class="logo" id="btnCharacter" aria-label="Switch to Kodoku, the koala theme" title="Switch character">
     <svg class="mark" aria-hidden="true"><use href="#yo-head"/></svg>
-    <h1>Yo<span>doku</span></h1>
-  </div>
+    <span class="brand-name" style="font-weight:700"><span id="brandPrefix">Yo</span><span class="brand-suffix">doku</span></span><span class="swap-cue" aria-hidden="true">⇄</span>
+  </button>
   <div class="hdr-right">
     <button class="iconbtn" id="btnHelp" aria-label="How to play"><svg width="26" height="26"><use href="#i-help"/></svg></button>
     <button class="iconbtn" id="btnSettings" aria-label="Settings"><svg width="26" height="26"><use href="#i-gear"/></svg></button>
@@ -310,11 +339,15 @@ header,.tabs,.status,.board-wrap,.controls,.intro,.playbar,.tip{width:100%;max-w
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
     <div class="grab"></div>
     <h2 id="settingsTitle">Settings</h2>
+    <div class="character-choices" role="group" aria-label="Choose your character"><button class="character-choice" data-character="dino" aria-pressed="true"><svg aria-hidden="true"><use href="#yo-happy"/></svg><span>Yodoku<small>Yo the dino</small></span></button><button class="character-choice" data-character="koala" aria-pressed="false"><svg aria-hidden="true"><use href="#ko-happy"/></svg><span>Kodoku<small>Ko the koala</small></span></button></div>
+    <p class="skin-note">Same puzzle, a different little friend. Your progress stays.</p>
+    <p class="skin-note"><a href="assets/index.html" target="_blank" rel="noopener">Open the character &amp; sound gallery ↗</a></p>
     <div class="setting"><div><b>Auto X</b><small>Placing a dino marks its row, column, colour and neighbours.</small></div><button class="switch" role="switch" data-setting="autoX" aria-checked="false"></button></div>
     <div class="setting"><div><b>Show mistakes</b><small>Highlight dinos that break a rule.</small></div><button class="switch" role="switch" data-setting="showErrors" aria-checked="true"></button></div>
     <div class="setting"><div><b>Check against solution</b><small>Optional extra help: flag incorrect dino placements, even without a rule conflict.</small></div><button class="switch" role="switch" data-setting="checkSolution" aria-checked="false"></button></div>
     <div class="setting"><div><b>Region patterns &amp; numbers</b><small>Tell regions apart without relying on colour.</small></div><button class="switch" role="switch" data-setting="patterns" aria-checked="false"></button></div>
     <div class="setting"><div><b>Sounds</b><small>Little pops and chirps.</small></div><button class="switch" role="switch" data-setting="sound" aria-checked="true"></button></div>
+    <button class="sound-preview" id="btnSoundPreview">Preview character sound</button>
     <div class="setting"><div><b>Haptics</b><small>Vibration on supported phones.</small></div><button class="switch" role="switch" data-setting="haptics" aria-checked="true"></button></div>
     <div class="setting"><div><b>Timer</b><small>Show the clock while playing.</small></div><button class="switch" role="switch" data-setting="showTimer" aria-checked="true"></button></div>
     <h2 style="font-size:18px;margin-top:16px">Your stats</h2>
