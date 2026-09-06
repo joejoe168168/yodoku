@@ -9,7 +9,7 @@
   const EMOJI = ['🩷', '🟧', '🟨', '🟩', '🟦', '🟪', '🩵', '⬜', '🟥'];
   const LS = {
     get(k, d) { try { const v = localStorage.getItem('yodoku.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem('yodoku.' + k, JSON.stringify(v)); } catch (e) { /* ignore */ } },
+    set(k, v) { try { localStorage.setItem('yodoku.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } },
     del(k) { try { localStorage.removeItem('yodoku.' + k); } catch (e) { /* ignore */ } }
   };
 
@@ -20,8 +20,16 @@
   if (!['cycle', 'dino', 'x'].includes(settings.tool)) settings.tool = 'cycle';
   const saveSettings = () => LS.set('settings', settings);
   saveSettings();
-  const stats = LS.get('stats', {});
-  for (const m of MODES) stats[m] = Object.assign({ solved: 0, best: null, streak: 0, lastDate: null }, stats[m] || {});
+  const savedStats = LS.get('stats', {});
+  const stats = savedStats && typeof savedStats === 'object' && !Array.isArray(savedStats) ? savedStats : {};
+  const nonNegative = v => Number.isFinite(v) && v >= 0 ? v : 0;
+  for (const m of MODES) {
+    stats[m] = Object.assign({ solved: 0, best: null, streak: 0, lastDate: null }, stats[m] || {});
+    stats[m].solved = Math.floor(nonNegative(stats[m].solved)); stats[m].streak = Math.floor(nonNegative(stats[m].streak));
+    if (!Number.isFinite(stats[m].best) || stats[m].best < 0) stats[m].best = null;
+  }
+  const legacyDailyDates = !Array.isArray(stats.daily.completedDates);
+  stats.daily.completedDates = legacyDailyDates ? [] : stats.daily.completedDates.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d));
   const saveStats = () => LS.set('stats', stats);
 
   // ---------- date helpers ----------
@@ -29,6 +37,11 @@
   const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const today = () => isoDate(new Date());
   const yesterday = () => { const d = new Date(); d.setDate(d.getDate() - 1); return isoDate(d); };
+  const previousDate = str => { const d = new Date(str + 'T12:00:00'); d.setDate(d.getDate() - 1); return isoDate(d); };
+  if (legacyDailyDates && /^\d{4}-\d{2}-\d{2}$/.test(stats.daily.lastDate)) {
+    let day = stats.daily.lastDate;
+    for (let i = 0; i < Math.max(1, Math.min(36600, stats.daily.streak)); i++) { stats.daily.completedDates.push(day); day = previousDate(day); }
+  }
   const fmtTime = ms => { const s = Math.floor(ms / 1000); return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; };
   const niceDate = str => new Date(str + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
   function currentStreak() {
@@ -74,6 +87,7 @@
   let cellEls = [];
   let visibleIssues = [], issueIndex = 0, areaTimer = 0, reactionTimer = 0, winTimer = 0;
   let restoredInvalid = false;
+  let storageWarning = false;
 
   function newSeed() {
     if (window.crypto && crypto.getRandomValues) { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0]; }
@@ -103,37 +117,58 @@
   function saveGame() {
     if (!game) return;
     const g = game;
-    LS.set('game.' + mode, { puzzle: g.puzzle, history: g.history, seed: g.seed, dateStr: g.dateStr, cells: g.cells, autoOwner: g.autoOwner, elapsed: currentElapsed(), hints: g.hints, solved: g.solved });
+    const saved = { puzzle: g.puzzle, history: g.history, seed: g.seed, dateStr: g.dateStr, cells: g.cells, autoOwner: g.autoOwner, autoX: settings.autoX, elapsed: currentElapsed(), hints: g.hints, solved: g.solved };
+    if (!LS.set('game.' + mode, saved)) {
+      const boardSaved = LS.set('game.' + mode, { ...saved, history: [] });
+      if (!storageWarning) toast(boardSaved ? 'Storage is full. Your board is saved, but undo history will reset after reload.' : 'Saving is unavailable. Keep this tab open to retain your progress.', 5000);
+      storageWarning = true;
+    }
     updateTabDots();
   }
   function loadGame(m) {
     const s = LS.get('game.' + m, null);
     if (!s) return null;
-    if (m === 'daily' && s.dateStr !== today()) return null;
+    if (m === 'daily' && s.dateStr !== today()) { if (s.dateStr) LS.set('dailyArchive.' + s.dateStr, s); return null; }
     try {
       const p = s.puzzle || (m === 'daily'
         ? Y.generate({ difficulty: Y.dailyDifficulty(s.dateStr), size: Y.dailySize(s.dateStr), seed: Y.dailySeed(s.dateStr) })
         : Y.generate({ difficulty: m, seed: s.seed }));
       const expectedN = m === 'daily' ? Y.dailySize(s.dateStr) : Y.DIFFS[m].n;
-      if (!Y.validatePuzzle(p) || p.n !== expectedN) {
+      if (!Y.validatePuzzle(p) || p.n !== expectedN || Y.countSolutions(p.n, p.region, 2) !== 1) {
         // Keep the old save recoverable if it contains a missing or broken region.
         LS.set('recovery.' + m, s); restoredInvalid = true; return null;
       }
-      if (!s.cells || s.cells.length !== p.n * p.n) return null;
-      const loaded = makeGame(p, { cells: s.cells, autoOwner: s.autoOwner || new Array(p.n * p.n).fill(-1), history: s.history || [], elapsed: s.elapsed || 0, hints: s.hints || 0, solved: !!s.solved, dateStr: s.dateStr || null });
-      if (!settings.autoX) clearAutomatic(loaded);
+      const validCells = cells => Array.isArray(cells) && cells.length === p.n * p.n && cells.every(v => v === 0 || v === 1 || v === 2);
+      if (!validCells(s.cells)) { LS.set('recovery.' + m, s); restoredInvalid = true; return null; }
+      function restoreMove(move) {
+        const cells = move.cells.slice(), owners = Array.isArray(move.autoOwner) ? move.autoOwner : [];
+        const autoOwner = cells.map((v, i) => {
+          const owner = owners[i];
+          return v === 1 && Number.isInteger(owner) && owner >= 0 && owner < cells.length && cells[owner] === 2 && Y.coverage(p.n, p.region, owner).has(i) ? owner : -1;
+        });
+        return { cells, autoOwner };
+      }
+      const loaded = makeGame(p, { ...restoreMove(s), history: (Array.isArray(s.history) ? s.history : []).filter(h => h && validCells(h.cells)).map(restoreMove), elapsed: nonNegative(s.elapsed), hints: Math.floor(nonNegative(s.hints)), solved: !!s.solved && Y.isSolved(p.n, p.region, s.cells), dateStr: s.dateStr || null });
+      if (!settings.autoX || s.autoX === false) for (const move of [loaded, ...loaded.history]) syncAssistance(move, p);
       return loaded;
     } catch (e) { return null; }
   }
 
   // ---------- timer ----------
   const timerEl = $('#timer');
-  function currentElapsed() { return game ? game.elapsed + (game.running ? Date.now() - game.startedAt : 0) : 0; }
-  function startTimer() { if (game && !game.running && !game.solved) { game.running = true; game.startedAt = Date.now(); } }
-  function pauseTimer() { if (game && game.running) { game.elapsed += Date.now() - game.startedAt; game.running = false; } }
+  function currentElapsed() { return game ? game.elapsed + (game.running ? Math.max(0, performance.now() - game.startedAt) : 0) : 0; }
+  function startTimer() { if (game && !game.running && !game.solved && !document.hidden && !$('.scrim.open')) { game.running = true; game.startedAt = performance.now(); } }
+  function pauseTimer() { if (game && game.running) { game.elapsed = currentElapsed(); game.running = false; } }
+  function resumeTimer() { if (game && (game.elapsed > 0 || game.hints > 0 || game.history.length > 0 || game.cells.some(v => v))) startTimer(); }
   function renderTimer() { timerEl.textContent = fmtTime(currentElapsed()); timerEl.style.visibility = settings.showTimer ? 'visible' : 'hidden'; }
-  setInterval(renderTimer, 500);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { pauseTimer(); saveGame(); } else if (game && !game.solved && game.history.length && !$('.scrim.open')) startTimer(); });
+  let calendarDay = today();
+  function checkCalendarDay() {
+    if (calendarDay === today()) return;
+    calendarDay = today(); renderLabels(); updateTabDots();
+    if (mode === 'daily' && game.dateStr !== today()) toast('A new Daily is ready. Finish this puzzle, or tap Today.', 4000);
+  }
+  setInterval(() => { renderTimer(); checkCalendarDay(); }, 500);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { pauseTimer(); saveGame(); } else { checkCalendarDay(); resumeTimer(); } });
   window.addEventListener('pagehide', () => { pauseTimer(); saveGame(); });
 
   // ---------- rendering ----------
@@ -278,7 +313,7 @@
     $('#btnClear').disabled = game.solved;
     const nextBtn = $('#btnNew');
     if (mode === 'daily') {
-      nextBtn.innerHTML = game.solved ? '<svg><use href="#i-share"/></svg>Share' : '<svg><use href="#i-next"/></svg>Skip';
+      nextBtn.innerHTML = game.dateStr !== today() ? '<svg><use href="#i-next"/></svg>Today' : game.solved ? '<svg><use href="#i-share"/></svg>Share' : '<svg><use href="#i-next"/></svg>Skip';
       nextBtn.disabled = false;
     } else {
       nextBtn.innerHTML = game.solved ? '<svg><use href="#i-next"/></svg>Next' : '<svg><use href="#i-next"/></svg>New';
@@ -289,7 +324,7 @@
   function updateTabDots() {
     for (const t of $$('.tab')) {
       const m = t.dataset.mode, s = LS.get('game.' + m, null);
-      const live = s && !s.solved && s.cells && s.cells.some(v => v !== 0) && (m !== 'daily' || s.dateStr === today());
+      const live = s && !s.solved && Array.isArray(s.cells) && s.cells.some(v => v !== 0) && (m !== 'daily' || s.dateStr === today());
       t.classList.toggle('has-progress', !!live);
       t.setAttribute('aria-selected', m === mode ? 'true' : 'false');
     }
@@ -303,6 +338,12 @@
       state.autoOwner[i] = -1;
     }
   }
+  function syncAssistance(state, puzzle) {
+    if (!settings.autoX) { clearAutomatic(state); return; }
+    state.cells.forEach((v, i) => {
+      if (v === 2) for (const j of Y.coverage(puzzle.n, puzzle.region, i)) if (state.cells[j] === 0) { state.cells[j] = 1; state.autoOwner[j] = i; }
+    });
+  }
   function renderInput() {
     $('#btnAutoX').setAttribute('aria-pressed', String(settings.autoX));
     $('#btnAutoX').textContent = `Auto X · ${settings.autoX ? 'On' : 'Off'}`;
@@ -312,6 +353,9 @@
   function toggleAutoX() {
     clearHints();
     settings.autoX = !settings.autoX;
+    // Apply the preference to historical automatic marks too, so Undo does not
+    // resurrect notes removed by switching assistance off, or omit newly enabled notes.
+    if (game) for (const h of game.history) syncAssistance(h, game.puzzle);
     if (game && !game.solved) {
       if (!settings.autoX) clearAutomatic(game);
       else game.cells.forEach((v, i) => { if (v === 2) applyAutoX(i); });
@@ -366,6 +410,7 @@
 
   function tapCell(i, value) {
     if (game.solved) return;
+    newArmed = 0;
     closeRegionInspector();
     clearHints();
     const cur = game.cells[i], next = value !== undefined ? value : settings.tool === 'dino' ? (cur === 2 ? 0 : 2) : settings.tool === 'x' ? (cur === 1 ? 0 : cur === 2 ? 2 : 1) : (cur + 1) % 3;
@@ -382,7 +427,7 @@
   let drag = null; // { down:i, moved:false, mode:'x'|'clear'|null, touched:Set, snapshotTaken }
   function cellFromPoint(x, y) {
     const r = board.getBoundingClientRect(), n = game.puzzle.n;
-    const cx = Math.floor((x - r.left) / r.width * n), cy = Math.floor((y - r.top) / r.height * n);
+    const cx = Math.floor((x - r.left - board.clientLeft) / board.clientWidth * n), cy = Math.floor((y - r.top - board.clientTop) / board.clientHeight * n);
     if (cx < 0 || cy < 0 || cx >= n || cy >= n) return -1;
     return cy * n + cx;
   }
@@ -391,17 +436,15 @@
     const i = cellFromPoint(e.clientX, e.clientY); if (i < 0) return;
     cellEls.forEach((el, k) => el.tabIndex = k === i ? 0 : -1);
     cellEls[i].focus({ preventScroll: true });
-    drag = { down: i, moved: false, mode: null, touched: new Set([i]), pid: e.pointerId };
+    drag = { down: i, moved: false, mode: null, touched: new Set([i]), pid: e.pointerId, lastX: e.clientX, lastY: e.clientY };
     try { board.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     cellEls[i].classList.add('press');
     e.preventDefault();
   });
-  board.addEventListener('pointermove', e => {
-    if (!drag || e.pointerId !== drag.pid) return;
-    const i = cellFromPoint(e.clientX, e.clientY);
+  function visitDragCell(i) {
     if (i < 0 || drag.touched.has(i)) return;
     if (!drag.moved) {
-      drag.moved = true; clearHints();
+      drag.moved = true; closeRegionInspector(); clearHints(); newArmed = 0;
       cellEls[drag.down].classList.remove('press');
       const v0 = game.cells[drag.down];
       drag.mode = settings.tool === 'dino' ? null : v0 === 0 ? 'x' : v0 === 1 ? 'clear' : null;
@@ -409,7 +452,17 @@
     }
     drag.touched.add(i);
     if (drag.mode) paint(i);
-  });
+  }
+  function moveDrag(e) {
+    if (!drag || e.pointerId !== drag.pid) return;
+    // Pointer events can jump several cells on a quick phone swipe. Sample the
+    // segment so every square crossed is included, not just event endpoints.
+    const dx = e.clientX - drag.lastX, dy = e.clientY - drag.lastY;
+    const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / (board.clientWidth / game.puzzle.n / 3)));
+    for (let k = 1; k <= steps; k++) visitDragCell(cellFromPoint(drag.lastX + dx * k / steps, drag.lastY + dy * k / steps));
+    drag.lastX = e.clientX; drag.lastY = e.clientY;
+  }
+  board.addEventListener('pointermove', moveDrag);
   function paint(i) {
     const v = game.cells[i];
     if (drag.mode === 'x' && v === 0) { game.cells[i] = 1; game.autoOwner[i] = -1; renderCell(i, true); sfx.x(); }
@@ -419,9 +472,10 @@
   }
   function endDrag(e) {
     if (!drag || (e && e.pointerId !== drag.pid)) return;
+    if (e?.type === 'pointerup') moveDrag(e);
     const d = drag; drag = null;
     cellEls[d.down].classList.remove('press');
-    if (!d.moved) { if (e && e.type !== 'pointercancel') tapCell(d.down); return; }
+    if (!d.moved) { if (e?.type === 'pointerup' && cellFromPoint(e.clientX, e.clientY) === d.down) tapCell(d.down); return; }
     if (d.mode) afterMove(true, -1);
   }
   board.addEventListener('pointerup', endDrag);
@@ -480,11 +534,16 @@
     if (game.solved || !Y.isSolved(n, region, game.cells)) return;
     game.solved = true; pauseTimer();
     const t = currentElapsed(), s = stats[mode];
-    s.solved++;
-    const isBest = s.best === null || t < s.best; if (isBest) s.best = t;
+    const alreadyCounted = mode === 'daily' && s.completedDates.includes(game.dateStr);
+    if (!alreadyCounted) s.solved++;
+    const isBest = !alreadyCounted && (s.best === null || t < s.best); if (isBest) s.best = t;
     if (mode === 'daily') {
-      if (s.lastDate === yesterday()) s.streak++; else if (s.lastDate !== today()) s.streak = 1;
-      s.lastDate = today();
+      // Credit the puzzle's date, including a puzzle finished after midnight.
+      if (!alreadyCounted) s.completedDates.push(game.dateStr);
+      s.completedDates.sort(); s.lastDate = s.completedDates[s.completedDates.length - 1];
+      s.streak = 0; let day = s.lastDate;
+      const completed = new Set(s.completedDates);
+      while (completed.has(day)) { s.streak++; day = previousDate(day); }
     }
     saveStats(); saveGame();
     board.classList.add('won');
@@ -524,7 +583,7 @@
     if (mode === 'daily' && currentStreak() > 1) sub += ` 🔥 ${currentStreak()}-day streak!`;
     $('#winSub').textContent = sub;
     $('#winGrid').textContent = emojiGrid();
-    $('#btnWinNext').innerHTML = mode === 'daily' ? '<svg width="22" height="22"><use href="#i-next"/></svg>Play more' : '<svg width="22" height="22"><use href="#i-next"/></svg>Next puzzle';
+    $('#btnWinNext').innerHTML = mode === 'daily' ? `<svg width="22" height="22"><use href="#i-next"/></svg>${game.dateStr !== today() ? 'Today’s puzzle' : 'Play more'}` : '<svg width="22" height="22"><use href="#i-next"/></svg>Next puzzle';
     openModal('#winModal');
   }
 
@@ -558,6 +617,7 @@
   // ---------- modals ----------
   let modalFocus = null, resumeAfterModal = false;
   function openModal(sel) {
+    if (drag) endDrag({ pointerId: drag.pid, type: 'pointercancel' });
     const current = $('.scrim.open'); if (current) closeModal('#' + current.id);
     modalFocus = document.activeElement; resumeAfterModal = !!game?.running; pauseTimer();
     $(sel).classList.add('open');
@@ -623,7 +683,7 @@
   $('#btnSettings').addEventListener('click', () => { renderStats(); openModal('#settingsModal'); });
   $('#btnSettingsClose').addEventListener('click', () => closeModal('#settingsModal'));
   $('#btnShare').addEventListener('click', share);
-  $('#btnWinNext').addEventListener('click', () => { closeModal('#winModal'); if (mode === 'daily') switchMode(stats.normal.solved > 3 ? 'hard' : 'normal'); else startNew(); });
+  $('#btnWinNext').addEventListener('click', () => { closeModal('#winModal'); if (mode === 'daily') switchMode(game.dateStr !== today() ? 'daily' : stats.normal.solved > 3 ? 'hard' : 'normal'); else startNew(); });
   for (const sw of $$('.switch')) {
     const k = sw.dataset.setting; sw.setAttribute('aria-checked', settings[k] ? 'true' : 'false');
     sw.setAttribute('aria-label', sw.parentElement.querySelector('b').textContent);
@@ -670,6 +730,10 @@
   $('#btnNew').addEventListener('click', () => {
     if (!game) return;
     if (mode === 'daily') {
+      if (game.dateStr !== today()) {
+        LS.set('dailyArchive.' + game.dateStr, { puzzle: game.puzzle, cells: game.cells, elapsed: currentElapsed(), solved: game.solved });
+        switchMode('daily'); return;
+      }
       if (game.solved) { share(); return; }
       if (Date.now() - newArmed > 2500) { newArmed = Date.now(); toast('There\'s one Daily per day. Tap again to hop to Normal instead.'); return; }
       switchMode('normal'); return;
@@ -681,6 +745,8 @@
   });
 
   function startNew() {
+    if (drag) endDrag({ pointerId: drag.pid, type: 'pointercancel' });
+    newArmed = 0;
     clearTimeout(winTimer);
     clearHints(); closeModal('#winModal');
     game = freshPuzzle(mode);
@@ -689,16 +755,18 @@
   }
 
   function switchMode(m) {
+    if (drag) endDrag({ pointerId: drag.pid, type: 'pointercancel' });
+    newArmed = 0;
     clearTimeout(winTimer);
     if (game) { pauseTimer(); saveGame(); }
     mode = m; LS.set('mode', m);
     clearHints(); closeModal('#winModal');
     game = loadGame(m) || freshPuzzle(m);
     if (game.solved && m !== 'daily') { game = freshPuzzle(m); }
-    buildBoard(); updateTabDots(); saveGame();
+    buildBoard(); updateTabDots(); checkWin(); resumeTimer(); saveGame();
     if (restoredInvalid) { restoredInvalid = false; toast('A saved puzzle had invalid regions. A fresh puzzle is ready; your old save is backed up.', 5000); }
   }
-  for (const t of $$('.tab')) t.addEventListener('click', () => { if (t.dataset.mode !== mode) { buzz(6); switchMode(t.dataset.mode); } });
+  for (const t of $$('.tab')) t.addEventListener('click', () => { if (t.dataset.mode !== mode || mode === 'daily' && game.dateStr !== today()) { buzz(6); switchMode(t.dataset.mode); } });
 
   // keyboard (desktop convenience)
   document.addEventListener('keydown', e => {
@@ -717,7 +785,9 @@
       const i = Number(cell.dataset.i), n = game.puzzle.n;
       const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -n, ArrowDown: n };
       if (e.key in moves) {
-        e.preventDefault(); const j = Math.max(0, Math.min(n * n - 1, i + moves[e.key]));
+        e.preventDefault();
+        const horizontalEdge = e.key === 'ArrowLeft' && i % n === 0 || e.key === 'ArrowRight' && i % n === n - 1;
+        const j = horizontalEdge ? i : Math.max(0, Math.min(n * n - 1, i + moves[e.key]));
         cell.tabIndex = -1; cellEls[j].tabIndex = 0; cellEls[j].focus(); return;
       }
       const key = e.key.toLowerCase();
@@ -725,8 +795,8 @@
         e.preventDefault(); tapCell(i, key === 'd' ? (game.cells[i] === 2 ? 0 : 2) : key === 'x' ? (game.cells[i] === 1 ? 0 : 1) : ['delete', 'backspace'].includes(key) ? 0 : undefined); return;
       }
     }
-    if (e.key === 'z' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('#btnUndo').click(); }
-    if (e.key === 'h') showHint();
+    if (e.key.toLowerCase() === 'z' && !e.shiftKey && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('#btnUndo').click(); }
+    if (e.key.toLowerCase() === 'h' && !e.metaKey && !e.ctrlKey && !e.altKey) showHint();
     if (e.key === 'Escape') for (const s of $$('.scrim.open')) closeModal('#' + s.id);
   });
 

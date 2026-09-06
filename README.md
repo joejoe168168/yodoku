@@ -40,6 +40,8 @@ respects the notch/home-bar safe areas, and works offline after the first visit.
 
 ## Browser checks
 
+The detailed feature audit, confirmed fixes, coverage and limitations are in [AUDIT.md](AUDIT.md). Additional regression commands are `node qa-engine-audit.cjs`, `node qa-gameplay-audit.cjs`, and `node qa-offline-audit.cjs`.
+
 Run `node qa-regions.cjs` for a 1,000-puzzle regression covering region counts, connectivity, valid placements, uniqueness, and malformed data across all four difficulties.
 Run `npm install --prefix .qa --no-audit --no-fund playwright sharp`, then `node qa.cjs` (uses installed Microsoft Edge). This checks manual/automatic notes, persistence, keyboard and touch input, drag undo, rule feedback, invalid completion, solution checking, patterns, graduated hints, the separate touch tutorial, reduced-motion completion, and responsive layouts. It also regenerates the icons and preview screenshots. Phone coverage uses browser touch emulation; physical Safari/iOS and Android checks are still recommended.
 
@@ -60,4 +62,6 @@ Run `npm install --prefix .qa --no-audit --no-fund playwright sharp`, then `node
 4. Grade it with a human-style solver (singles → confined regions → region sets → one-step lookahead)
    and keep sampling until the score lands in the difficulty band. Typical generation time: a few ms.
 
-`Yodoku.generate({ difficulty: 'hard', seed: 123 })` is deterministic, which is what makes the Daily work.
+`Yodoku.generate({ difficulty: 'hard', seed: 123 })` uses a fixed candidate budget so the same seed and game version give the same board on different devices. Existing saved layouts are retained across updates. Daily uses the local calendar date; finishing after midnight credits the puzzle's date, and the Today button opens the new Daily.
+
+When changing the app shell, bump the cache version in `sw.js`. The service worker installs and serves a matching set of files for each release, including offline.

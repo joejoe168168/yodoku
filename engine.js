@@ -275,6 +275,7 @@
   function logicSolve(n, region, cells) {
     const st = makeState(n, region, cells), groups = groupCells(st);
     const stats = { single: 0, confined: 0, set: 0, lookahead: 0, steps: 0 };
+    if (cells && conflicts(n, region, cells).bad.size) return { solved: false, stats, st };
     let placedCount = 0; for (let i = 0; i < n * n; i++) placedCount += st.placed[i];
     while (placedCount < n) {
       const step = nextStep(st, groups);
@@ -283,7 +284,7 @@
       applyStep(st, step);
       if (step.place !== undefined) placedCount++;
     }
-    return { solved: true, stats, st };
+    return { solved: isSolved(n, region, Array.from(st.placed, v => v ? 2 : 0)), stats, st };
   }
 
   // difficulty score: higher = harder
@@ -304,12 +305,13 @@
   function generate(opts) {
     const diff = DIFFS[opts.difficulty] || DIFFS.normal;
     const n = opts.size || diff.n;
+    if (!Number.isInteger(n) || n < 4 || n > 9) throw new RangeError('Puzzle size must be between 4 and 9');
     const r = rng(opts.seed >>> 0);
-    const budgetMs = opts.budgetMs || 700, maxCands = opts.candidates || 40;
-    const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
-    const t0 = now();
+    // A fixed candidate budget keeps Daily and seed-based restores identical on
+    // fast desktops and slow phones. Elapsed wall time must not pick the board.
+    const maxCands = opts.candidates || 40;
     let best = null, bestDist = Infinity, cands = 0, tries = 0;
-    while (true) {
+    while (tries < 5000) {
       tries++;
       const sol = randomSolution(n, r);
       const region = growRegions(n, sol, r);
@@ -317,13 +319,15 @@
       if (!unique) unique = repair(n, region, sol, r);
       if (unique && validatePuzzle({ n, region: Array.from(region), sol })) {
         cands++;
-        const score = rate(n, region);
+        const logic = logicSolve(n, region);
+        if (!logic.solved) continue;
+        const s = logic.stats;
+        const score = s.confined * 1.5 + s.set * 4 + s.lookahead * 6 + n * 0.5;
         const dist = score < diff.min ? diff.min - score : score > diff.max ? score - diff.max : 0;
         if (dist < bestDist) { bestDist = dist; best = { n, region: Array.from(region), sol, score }; }
         if (dist === 0) break;
       }
-      if (best && (cands >= maxCands || now() - t0 > budgetMs)) break;
-      if (tries > 5000) break;
+      if (best && cands >= maxCands) break;
     }
     if (!best) throw new Error('Unable to generate a valid puzzle');
     best.seed = opts.seed >>> 0; best.difficulty = opts.difficulty; best.tries = tries;

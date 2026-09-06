@@ -1,0 +1,37 @@
+# Gameplay and logic audit — 6 September 2026
+
+The checked puzzle rules and hint deductions are consistent. The audit also reproduced and corrected several state-handling bugs that the earlier feature checks did not exercise. All checks described below pass after the fixes.
+
+## Findings and changes
+
+| Area | Finding | Result |
+| --- | --- | --- |
+| Seeded generation / Daily | A 700 ms cutoff could select a different layout on a slower device, even with the same seed. | Selection now uses a fixed candidate budget. Mock fast and slow clocks produce identical layouts. |
+| Internal logic solver | A starting board with N conflicting dinos could be reported as solved by `logicSolve`. The separate gameplay win check already rejected it. | Conflicting starting states are rejected and the final solver state is checked against the rules. |
+| Generation guarantees | The fallback could retain a unique board without explicitly requiring the advertised logic solver to finish it. | Only connected, valid, unique boards completed by the logic solver are retained. |
+| Timer | Returning to a mode or reloading a hint-only game could leave the timer paused. | In-progress games resume; dialogs and hidden tabs pause. Elapsed time uses a monotonic clock so clock corrections do not distort results. |
+| Fast drags | A swipe delivered as a single pointer move painted only its endpoints. | Squares crossed by the segment are painted, with the entire gesture treated as one undoable move. Releasing outside the board does not accidentally place a dino. |
+| Auto X and Undo | Undo could restore a snapshot made before Auto X was enabled, leaving assistance inconsistent. | Current preference is applied to history when it changes and when returning to a mode saved with a different preference. Manual notes remain distinct from automatic notes. |
+| New puzzle confirmation | A confirmation armed in one mode could carry over to another puzzle. | Switching puzzles or making a new move resets the confirmation. |
+| Save restoration | Malformed history could crash Undo; an incorrect saved `solved` flag could freeze an unfinished Daily. | Move data, ownership, statistics and actual solved state are checked. Invalid boards are backed up before replacement. Storage failures are reported. |
+| Daily date and streak | Finishing after midnight credited the completion date rather than the puzzle date. A replay could also count twice. | Results use the puzzle date. Completed dates prevent duplicate counts, and existing streaks are migrated. A Today action opens the new Daily without miscrediting the previous one. |
+| Keyboard | Horizontal arrows could unexpectedly jump between rows; modified browser shortcuts could trigger hints. | Horizontal navigation stays within its row, and hint shortcuts respect modifier keys. |
+| Offline updates | Background replacement of individual cached scripts could mix releases. | A complete app shell is cached on installation, then served as a matching set until the next service-worker version activates. |
+
+## Verification
+
+- `node qa-regions.cjs`: 1,000 generated boards across Easy, Normal, Hard and Ultra; exactly N connected regions, valid solution placements, uniqueness, and rejection of malformed puzzle data.
+- `node qa-engine-audit.cjs`: 400 boards completed through 4,762 successive hint steps. Every suggested placement/elimination was checked against the unique solution. Coverage was checked with an independent pairwise rule oracle, and 40 boards also had their solution counts independently enumerated. Tests cover singles, confined regions, region sets, lookahead, wrong dinos, incorrect X notes, and device-speed independence.
+- `node qa-gameplay-audit.cjs`: 21 focused browser scenarios covering timer resume/pause, clock changes, drag input, Auto X ownership/history/mode switches, confirmation scope, save recovery, Daily dates/streaks/duplicate results, keyboard controls, share/clipboard/cancel behavior, storage failure, offline reload, and sound/haptic settings.
+- `node qa-offline-audit.cjs`: cache installation, release consistency, and preservation of unrelated caches and requests.
+- `node qa.cjs`: existing desktop and compact-phone checks, touch emulation, direct tools, note preservation, undo, region inspection, patterns, graduated hints, tutorial isolation, mistake feedback, full invalid boards, solution checking, completion, and reduced motion.
+
+## Scope and limitations
+
+These are sampled regression checks, not a proof of every possible game state. Phone interaction is browser-emulated; physical iOS/Android behavior, audible sound quality, vibration strength, and native share sheets still require real-device testing. Sharing tests use stubs and send nothing externally.
+
+Daily uses the device's local calendar date. Equal dates and seeds produce the same newly generated board on the same game version. Existing saved layouts are preserved, so an already-started Daily from an older release can differ during an upgrade.
+
+Difficulty score bands are targets: after the fixed candidate budget, the closest logic-solvable candidate may be selected. Board dimensions, valid regions and unique solutions remain required. Saves and statistics remain local to the browser; there is no account synchronization or multi-tab conflict resolution.
+
+For future app-shell changes, bump the cache version in `sw.js` so installed/offline clients receive the complete new release.
