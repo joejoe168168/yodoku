@@ -201,7 +201,9 @@ body[data-character="koala"]{--green-dark:#475976;--green:#8AA79B;--bg2:#EAE8F3;
 .mascot-greeting{animation:mascot-greeting .65s ease-in-out}.cell .dino.pop::before{content:'✦';position:absolute;color:#FFFDF3;text-shadow:0 1px #A58739;font-size:18px;right:0;top:0;pointer-events:none;animation:twinkle .45s ease-out forwards}.mascot-eyes{transform-box:fill-box;transform-origin:center;animation:blink 7s infinite}.board .mascot-eyes{animation:none}.intro > svg{animation:cosy-float 5s ease-in-out infinite}.win-hero svg{animation:bounce 1.2s ease-in-out 3}
 @keyframes mascot-greeting{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}65%{transform:rotate(10deg)}}@keyframes twinkle{from{opacity:1;transform:translate(0,4px) scale(.5)}to{opacity:0;transform:translate(3px,-10px) scale(1.2)}}@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.08)}}@keyframes cosy-float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5px) rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.mascot-eyes,.intro > svg,.win-hero svg,.mascot-greeting{animation:none!important}.cell .dino.pop::before{display:none}}
-@media(max-width:380px){.logo .brand-name{font-size:25px}.character-choice{padding:8px;gap:5px}.character-choice svg{width:42px;height:42px}}
+body[data-character="pig"]{--green-dark:#885568;--green:#C58699;--bg2:#F7E5E9;background-color:#FFF8F4;background-image:radial-gradient(ellipse at 0% 0%,#F8DAE3 0,transparent 45%),radial-gradient(ellipse at 100% 100%,#FFE7CD 0,transparent 45%)}body[data-character="pig"] .logo .brand-name{color:#885568}body[data-character="pig"] .logo .brand-name .brand-suffix{color:#C17E65}body[data-character="pig"] .ctl.primary,body[data-character="pig"] .big,body[data-character="pig"] .tool[aria-pressed="true"]{background:#885568}body[data-character="pig"] .character-choice[aria-pressed="true"]{background:#FFF0F4}
+.character-choices{grid-template-columns:repeat(3,minmax(0,1fr))}.character-choice{flex-direction:column;text-align:center;padding:8px 4px;gap:3px}.character-choice small{font-size:11px}
+@media(max-width:380px){.logo .brand-name{font-size:25px}.character-choice{padding:8px 4px;gap:5px}.character-choice svg{width:42px;height:42px}}
 </style>
 </head>
 <body>
@@ -247,6 +249,27 @@ body[data-character="koala"]{--green-dark:#475976;--green:#8AA79B;--bg2:#EAE8F3;
     </g>
     <symbol id="ko" viewBox="0 0 100 100"><use href="#ko-body"/><g class="mascot-eyes" fill="#364559"><ellipse cx="33" cy="38" rx="3" ry="4"/><ellipse cx="67" cy="38" rx="3" ry="4"/><circle cx="34" cy="36.5" r="1" fill="white"/><circle cx="68" cy="36.5" r="1" fill="white"/></g><path d="M45 55Q50 60 55 55" fill="none" stroke="#485568" stroke-width="2" stroke-linecap="round"/></symbol>
     <symbol id="ko-head" viewBox="0 0 100 100"><use href="#ko"/></symbol>
+    <g id="pig-body" stroke="#885568" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M77 73c20 8 20-12 11-10-8 2-2 10 3 6" fill="none" stroke="#D98C9F" stroke-width="4"/>
+      <ellipse cx="50" cy="72" rx="25" ry="23" fill="#F7B9C6"/>
+      <ellipse cx="50" cy="75" rx="16" ry="16" fill="#FFE6DF" stroke="none"/>
+      <path d="M28 82q-11 13 0 13h12l-1-11M61 84l-1 11h12q11 0 0-13" fill="#D58C9E"/>
+      <path d="M31 89v5M69 89v5" fill="none"/>
+      <path d="M25 67q-15-4-11 7t16 2M75 67q15-4 11 7t-16 2" fill="#F7B9C6"/>
+      <path d="M21 32Q9 19 17 6q17 1 23 16M60 22Q66 7 83 6q9 13-4 26" fill="#F7B9C6"/>
+      <path d="M24 25l-3-11 11 8M68 22l11-8-3 11" fill="#E893AA" stroke="none"/>
+      <ellipse cx="50" cy="40" rx="34" ry="29" fill="#FBC7D0"/>
+      <path d="M43 14q9-12 14 1" fill="none" stroke="#D58C9E"/>
+      <ellipse cx="26" cy="47" rx="6" ry="3.5" fill="#EE92A9" stroke="none"/>
+      <ellipse cx="74" cy="47" rx="6" ry="3.5" fill="#EE92A9" stroke="none"/>
+      <ellipse cx="50" cy="46" rx="14" ry="10" fill="#EE9DB2" stroke="#C27891" stroke-width="2"/>
+      <ellipse cx="45" cy="46" rx="2.2" ry="3" fill="#A9637D" stroke="none"/>
+      <ellipse cx="55" cy="46" rx="2.2" ry="3" fill="#A9637D" stroke="none"/>
+    </g>
+    <symbol id="pig" viewBox="0 0 100 100"><use href="#pig-body"/><g class="mascot-eyes" fill="#674756"><ellipse cx="32" cy="33" rx="3" ry="4"/><ellipse cx="68" cy="33" rx="3" ry="4"/><circle cx="33" cy="31.5" r="1" fill="white"/><circle cx="69" cy="31.5" r="1" fill="white"/></g><path d="M45 60q5 5 10 0" fill="none" stroke="#885568" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="pig-head" viewBox="0 0 100 100"><use href="#pig"/></symbol>
+    <symbol id="pig-happy" viewBox="0 0 100 100"><use href="#pig-body"/><path d="M28 34q4-7 8 0M64 34q4-7 8 0" fill="none" stroke="#674756" stroke-width="2.5" stroke-linecap="round"/><path d="M44 58q6 14 12 0Z" fill="#885568"/><path d="M48 62h4" stroke="#F7ADC0" stroke-width="3" stroke-linecap="round"/><path d="M7 38c-7-7-8 4 0 8 8-4 7-15 0-8M92 18c-7-7-8 4 0 8 8-4 7-15 0-8" fill="#E784A4"/></symbol>
+    <symbol id="pig-oops" viewBox="0 0 100 100"><use href="#pig-body"/><circle cx="32" cy="33" r="4" fill="white"/><circle cx="68" cy="33" r="4" fill="white"/><circle cx="32" cy="34" r="2" fill="#674756"/><circle cx="68" cy="34" r="2" fill="#674756"/><ellipse cx="50" cy="61" rx="3" ry="4" fill="#885568"/><path d="M89 27q-6 10 0 10q6 0 0-10" fill="#88C9E7"/></symbol>
     <symbol id="ko-happy" viewBox="0 0 100 100"><use href="#ko-body"/><path d="M29 39q4-7 8 0M63 39q4-7 8 0" fill="none" stroke="#485568" stroke-width="2.5" stroke-linecap="round"/><path d="M43 53Q50 68 57 53Z" fill="#8B596B"/><path d="M47 58q3-2 6 0" fill="none" stroke="#F1ABB9" stroke-width="3"/><path d="M9 56v8M5 60h8M90 10v8M86 14h8" stroke="#D5AB49" stroke-width="2.5" stroke-linecap="round"/></symbol>
     <symbol id="ko-oops" viewBox="0 0 100 100"><use href="#ko-body"/><circle cx="33" cy="38" r="4" fill="white"/><circle cx="67" cy="38" r="4" fill="white"/><circle cx="33" cy="39" r="2" fill="#364559"/><circle cx="67" cy="39" r="2" fill="#364559"/><ellipse cx="50" cy="56" rx="3" ry="4" fill="#8B596B"/><path d="M84 9q-6 10 0 10q6 0 0-10" fill="#88C9E7"/></symbol>
     <symbol id="egg" viewBox="0 0 100 100">
@@ -339,7 +362,7 @@ body[data-character="koala"]{--green-dark:#475976;--green:#8AA79B;--bg2:#EAE8F3;
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
     <div class="grab"></div>
     <h2 id="settingsTitle">Settings</h2>
-    <div class="character-choices" role="group" aria-label="Choose your character"><button class="character-choice" data-character="dino" aria-pressed="true"><svg aria-hidden="true"><use href="#yo-happy"/></svg><span>Yodoku<small>Yo the dino</small></span></button><button class="character-choice" data-character="koala" aria-pressed="false"><svg aria-hidden="true"><use href="#ko-happy"/></svg><span>Kodoku<small>Ko the koala</small></span></button></div>
+    <div class="character-choices" role="group" aria-label="Choose your character"><button class="character-choice" data-character="dino" aria-pressed="true"><svg aria-hidden="true"><use href="#yo-happy"/></svg><span>Yodoku<small>Yo the dino</small></span></button><button class="character-choice" data-character="koala" aria-pressed="false"><svg aria-hidden="true"><use href="#ko-happy"/></svg><span>Kodoku<small>Ko the koala</small></span></button><button class="character-choice" data-character="pig" aria-pressed="false"><svg aria-hidden="true"><use href="#pig-happy"/></svg><span>Pigdoku<small>Pip the pig</small></span></button></div>
     <p class="skin-note">Same puzzle, a different little friend. Your progress stays.</p>
     <p class="skin-note"><a href="assets/index.html" target="_blank" rel="noopener">Open the character &amp; sound gallery ↗</a></p>
     <div class="setting"><div><b>Auto X</b><small>Placing a dino marks its row, column, colour and neighbours.</small></div><button class="switch" role="switch" data-setting="autoX" aria-checked="false"></button></div>

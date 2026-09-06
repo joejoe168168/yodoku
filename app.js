@@ -15,15 +15,16 @@
 
   // ---------- settings & stats ----------
   const settings = Object.assign({ autoX: false, showErrors: true, checkSolution: false, patterns: false, sound: true, haptics: true, showTimer: true, seenHelp: false, tool: 'cycle', character: 'dino' }, LS.get('settings', {}));
-  if (!['dino', 'koala'].includes(settings.character)) settings.character = 'dino';
-  const CHARACTERS = { dino: { title: 'Yodoku', name: 'Yo', symbol: 'yo', animal: 'dino', emoji: '🦖' }, koala: { title: 'Kodoku', name: 'Ko', symbol: 'ko', animal: 'koala', emoji: '🐨' } };
+  if (!['dino', 'koala', 'pig'].includes(settings.character)) settings.character = 'dino';
+  const CHARACTERS = { dino: { title: 'Yodoku', name: 'Yo', prefix: 'Yo', symbol: 'yo', animal: 'dino', emoji: '🦖' }, koala: { title: 'Kodoku', name: 'Ko', prefix: 'Ko', symbol: 'ko', animal: 'koala', emoji: '🐨' }, pig: { title: 'Pigdoku', name: 'Pip', prefix: 'Pig', symbol: 'pig', animal: 'pig', emoji: '🐷' } };
+  const nextCharacter = () => { const keys = Object.keys(CHARACTERS); return keys[(keys.indexOf(settings.character) + 1) % keys.length]; };
   const character = () => CHARACTERS[settings.character];
   const mascot = (face = '') => '#' + character().symbol + (face ? '-' + face : '');
   function characterText(text) {
-    return text.replace(/\b(?:dinos|koalas|dino|koala)\b/gi, word => {
+    return text.replace(/\b(?:dinos|koalas|pigs|dino|koala|pig)\b/gi, word => {
       const animal = character().animal + (/s$/i.test(word) ? 's' : '');
       return /^[A-Z]/.test(word) ? animal[0].toUpperCase() + animal.slice(1) : animal;
-    }).replace(/\b(?:Yodoku|Kodoku)\b/g, character().title).replace(/\b(?:Yo|Ko)\b/g, character().name);
+    }).replace(/\b(?:Yodoku|Kodoku|Pigdoku)\b/g, character().title).replace(/\b(?:Yo|Ko|Pip)\b/g, character().name);
   }
   function translateCharacter(root = document.body) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -107,6 +108,7 @@
     try {
       audioContext();
       if (settings.character === 'koala') freq *= .75;
+      if (settings.character === 'pig') freq *= 1.125;
       const t = actx.currentTime + (when || 0);
       const o = actx.createOscillator(), g = actx.createGain();
       o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t);
@@ -662,7 +664,11 @@
       for (const p of parts) {
         p.x += p.vx; p.y += p.vy; p.vy += .45; p.vx *= .99; p.rot += p.vr;
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.globalAlpha = Math.max(0, 1 - Math.max(0, dt - 1.6));
-        if (p.egg) { if (settings.character === 'koala') ctx.fillStyle = '#8DB58A'; ctx.beginPath(); ctx.ellipse(0, 0, p.r * (settings.character === 'koala' ? .45 : .8), p.r, 0, 0, 6.29); ctx.fill(); } else ctx.fillRect(-p.r / 2, -p.r / 3, p.r, p.r * .66);
+        if (p.egg && settings.character === 'pig') {
+          ctx.fillStyle = '#E784A4'; ctx.beginPath(); ctx.moveTo(0, p.r * .8);
+          ctx.bezierCurveTo(-p.r * 1.6, -p.r * .2, -p.r * .6, -p.r * 1.3, 0, -p.r * .4);
+          ctx.bezierCurveTo(p.r * .6, -p.r * 1.3, p.r * 1.6, -p.r * .2, 0, p.r * .8); ctx.fill();
+        } else if (p.egg) { if (settings.character === 'koala') ctx.fillStyle = '#8DB58A'; ctx.beginPath(); ctx.ellipse(0, 0, p.r * (settings.character === 'koala' ? .45 : .8), p.r, 0, 0, 6.29); ctx.fill(); } else ctx.fillRect(-p.r / 2, -p.r / 3, p.r, p.r * .66);
         ctx.restore();
       }
       if (dt < 2.6) requestAnimationFrame(frame); else { cv.classList.add('hidden'); ctx.clearRect(0, 0, innerWidth, innerHeight); }
@@ -743,13 +749,14 @@
   function renderCharacter() {
     const skin = character(); document.body.dataset.character = settings.character;
     document.title = `${skin.title} — a cosy logic puzzle`;
-    $('#brandPrefix').textContent = skin.name;
-    $('#btnCharacter').setAttribute('aria-label', `Switch to ${settings.character === 'dino' ? 'Kodoku, the koala' : 'Yodoku, the dino'} theme`);
-    $('link[rel="icon"]').setAttribute('href', settings.character === 'koala' ? 'assets/ko-icon.svg' : 'icons/icon.svg');
+    $('#brandPrefix').textContent = skin.prefix;
+    const next = CHARACTERS[nextCharacter()];
+    $('#btnCharacter').setAttribute('aria-label', `Switch to ${next.title}, the ${next.animal} theme`);
+    $('link[rel="icon"]').setAttribute('href', settings.character === 'dino' ? 'icons/icon.svg' : `assets/${skin.symbol}-icon.svg`);
     for (const button of $$('.character-choice')) button.setAttribute('aria-pressed', String(button.dataset.character === settings.character));
     for (const use of $$('use')) {
       if (use.closest('defs,.character-choices')) continue;
-      const match = /^(?:#yo|#ko)(-happy|-oops|-head)?$/.exec(use.getAttribute('href') || '');
+      const match = /^(?:#yo|#ko|#pig)(-happy|-oops|-head)?$/.exec(use.getAttribute('href') || '');
       if (match) use.setAttribute('href', '#' + skin.symbol + (match[1] || ''));
     }
     $('[data-tool="dino"]').textContent = skin.animal[0].toUpperCase() + skin.animal.slice(1);
@@ -763,7 +770,7 @@
     if (settings.sound) sfx.place();
     toast(`Hello from ${character().name}! Your puzzle is right where you left it.`);
   }
-  $('#btnCharacter').addEventListener('click', () => selectCharacter(settings.character === 'dino' ? 'koala' : 'dino'));
+  $('#btnCharacter').addEventListener('click', () => selectCharacter(nextCharacter()));
   for (const button of $$('.character-choice')) button.addEventListener('click', () => selectCharacter(button.dataset.character));
   $('#btnSoundPreview').addEventListener('click', () => { if (settings.sound) sfx.place(); else toast('Turn on Sounds to hear your character.'); });
   $('#btnShare').addEventListener('click', share);

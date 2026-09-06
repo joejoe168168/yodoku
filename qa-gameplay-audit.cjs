@@ -154,6 +154,34 @@ const Y = require('./engine');
       const durations=await page.evaluate(async()=>{const a=new AudioContext();try{return await Promise.all(['yo','ko'].flatMap(s=>['x','clear','place','error','hint','win'].map(async e=>{const r=await fetch(`assets/sounds/${s}-${e}.wav`);if(!r.ok)throw Error(r.status);return (await a.decodeAudioData(await r.arrayBuffer())).duration;})));}finally{await a.close();}});
       assert.equal(durations.length,12);assert.ok(durations.every(d=>d>0&&d<2));
     });
+    await run('pig theme cycles all characters and preserves moves on small screens',async page=>{
+      await page.setViewportSize({width:320,height:568});await page.locator('.cell').nth(0).click();const before=await state(page);
+      await page.locator('#btnCharacter').click();await page.locator('#btnCharacter').click();assert.match(await page.title(),/^Pigdoku/);
+      assert.equal(await page.locator('#brandPrefix').innerText(),'Pig');assert.equal(await page.locator('[data-tool="dino"]').innerText(),'Pig');
+      assert.equal(await page.locator('.dino use').first().getAttribute('href'),'#pig');assert.match(await page.locator('.cell').nth(0).getAttribute('aria-label'),/pig/);
+      await page.reload();assert.match(await page.title(),/^Pigdoku/);assert.deepEqual((await state(page)).cells,before.cells);assert.deepEqual((await state(page)).history,before.history);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+2));
+      await page.screenshot({path:'preview-pigdoku-mobile.png',fullPage:true});
+      await page.locator('#btnSettings').click();assert.equal(await page.locator('.character-choice').count(),3);
+      assert.ok(await page.evaluate(()=>[...document.querySelectorAll('.character-choice')].every(el=>{const r=el.getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&r.width>=44&&r.height>=44;})));
+      await page.screenshot({path:'preview-pigdoku-settings.png',fullPage:true});
+      await page.locator('#btnSettingsClose').click();await page.locator('.cell').nth(1).click();assert.equal(await page.locator('.dino use[href="#pig-oops"]').count(),2);
+      await page.locator('#btnUndo').click();await page.locator('#btnCharacter').click();assert.match(await page.title(),/^Yodoku/);assert.deepEqual((await state(page)).cells,before.cells);
+      await page.locator('#btnSettings').click();await page.locator('.character-choice[data-character="pig"]').click();await page.locator('#btnSettingsClose').click();assert.match(await page.title(),/^Pigdoku/);
+      await page.locator('#btnHelp').click();await page.locator('#btnTutorial').click();await page.locator('#practiceBoard button').nth(1).click();assert.equal(await page.locator('#practiceBoard use[href="#pig"]').count(),1);assert.match(await page.locator('#tutorialStatus').innerText(),/pig/);
+    });
+    await run('pig completion shares Pigdoku and pig emoji',async page=>{
+      await page.locator('#btnCharacter').click();await page.locator('#btnCharacter').click();
+      await page.evaluate(()=>Object.defineProperty(navigator,'share',{configurable:true,value:async data=>{window.shared=data.text;}}));
+      await page.locator('.cell').nth(6*7+p.sol[6]).click();await tick(page,1500);
+      assert.equal(await page.locator('.dino use[href="#pig-happy"]').count(),7);
+      await page.locator('#btnShare').click();assert.match(await page.evaluate(()=>window.shared),/^Pigdoku/);assert.equal((await page.evaluate(()=>window.shared)).split('🐷').length-1,7);
+    },{'game.normal':almostSolved(p)});
+    await run('pig sounds decode and theme survives offline reload',async(page,context)=>{
+      await page.locator('#btnCharacter').click();await page.locator('#btnCharacter').click();await page.evaluate(()=>navigator.serviceWorker.ready);await page.reload();await context.setOffline(true);await page.reload();assert.match(await page.title(),/^Pigdoku/);
+      const durations=await page.evaluate(async()=>{const a=new AudioContext();try{return await Promise.all(['x','clear','place','error','hint','win'].map(async e=>{const r=await fetch(`assets/sounds/pig-${e}.wav`);if(!r.ok)throw Error(r.status);return (await a.decodeAudioData(await r.arrayBuffer())).duration;}));}finally{await a.close();}});
+      assert.equal(durations.length,6);assert.ok(durations.every(d=>d>0&&d<2));
+    });
     console.log(JSON.stringify({passed,failures},null,2)); if(failures.length)process.exitCode=1;
   } finally { await browser.close(); server.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
